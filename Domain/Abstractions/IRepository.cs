@@ -3,12 +3,12 @@ using Domain.Entities;
 
 namespace Domain.Abstractions;
 
-public class PagedResult<T>
+public class PagedResult<T>(List<T> items, int totalCount, int pageNumber, int pageSize)
 {
-    public IReadOnlyList<T> Items { get; set; }
-    public int TotalCount { get; set; }
-    public int PageNumber { get; set; }
-    public int PageSize { get; set; }
+    public IReadOnlyList<T> Items { get; set; } = items;
+    public int TotalCount { get; set; } = totalCount;
+    public int PageNumber { get; set; } = pageNumber;
+    public int PageSize { get; set; } = pageSize;
 }
 
 public interface IRepository<T> where T : Entity
@@ -19,7 +19,7 @@ public interface IRepository<T> where T : Entity
         params Expression<Func<T, object>>[]? includesProperties);
 
     Task<IReadOnlyList<T>> ListAsync(
-        Expression<Func<T, bool>> filter,
+        Expression<Func<T, bool>>? filter = null,
         CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[]? includesProperties);
     
