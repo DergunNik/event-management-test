@@ -39,5 +39,12 @@ public interface IRepository<T> where T : Entity
 
     Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
 
-    Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
+    Task<int> DeleteWhereAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
+
+    Task<T?> FirstOrDefaultAsync(
+        Expression<Func<T, bool>> filter, 
+        CancellationToken cancellationToken = default,
+        params Expression<Func<T, object>>[]? includesProperties);
+
+    Task<bool> AnyAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
 }

@@ -20,6 +20,11 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
     public async Task CreateDataBaseAsync() => await context.Database.EnsureCreatedAsync();
     public async Task DeleteDataBaseAsync() => await context.Database.EnsureDeletedAsync();
 
+    public async Task SaveChangesAsync()
+    {
+        await context.SaveChangesAsync();
+    }
+    
     public void BeginTransaction()
     {
         _currentTransaction = context.Database.BeginTransaction();
@@ -31,7 +36,6 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
         {
             try
             {
-                await context.SaveChangesAsync();
                 await _currentTransaction.CommitAsync();
             }
             catch (Exception e)

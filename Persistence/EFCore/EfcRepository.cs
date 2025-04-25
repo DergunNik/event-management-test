@@ -21,9 +21,22 @@ public class EfcRepository<T>(AppDbContext context) : IRepository<T> where T : E
         return Task.CompletedTask;
     }
 
-    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+    public async Task<int> DeleteWhereAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await _entities.Where(filter).FirstOrDefaultAsync(cancellationToken);
+        return await _entities.Where(filter).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<T?> FirstOrDefaultAsync(
+        Expression<Func<T, bool>> filter,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<T, object>>[]? includesProperties)
+    {
+        IQueryable<T> query = _entities;
+
+        query = includesProperties?.Aggregate(query,
+            (current, include) => current.Include(include)) ?? query;
+
+        return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
     public async Task<T?> GetByIdAsync(
@@ -77,22 +90,29 @@ public class EfcRepository<T>(AppDbContext context) : IRepository<T> where T : E
         return await query.ToListAsync(cancellationToken: cancellationToken);
     }
 
-    private IQueryable<T> GetQueryable(Expression<Func<T, bool>>? filter, Expression<Func<T, object>>[]? includesProperties)
-    {
-        var query = _entities.AsQueryable();
-        
-        if (filter is not null)
-            query = query.Where(filter);
-        
-        query = includesProperties?.Aggregate(query, 
-            (current, include) => current.Include(include)) ?? query;
-        
-        return query;
-    }
-
     public Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
         context.Entry(entity).State = EntityState.Modified;
         return Task.CompletedTask;
+    }
+
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+    {
+        return await _entities.AnyAsync(filter, cancellationToken);
+    }
+
+    private IQueryable<T> GetQueryable(Expression<Func<T, bool>>? filter, Expression<Func<T, object>>[]? includesProperties)
+    {
+        var query = _entities.AsQueryable();
+
+        if (filter is not null)
+        {
+            query = query.Where(filter);
+        }
+
+        query = includesProperties?.Aggregate(query, 
+            (current, include) => current.Include(include)) ?? query;
+        
+        return query;
     }
 }

@@ -8,9 +8,9 @@ public class User : Entity
     public string LastName { get; set; }
     public DateTime DateOfBirth { get; set; }
     public string Email { get; set; }
+    public bool IsEmailConfirmed { get; set; }
     public UserRole UserRole { get; set; }
     public string PasswordHash { get; set; }
-    public string Salt { get; set; }
-
+    
     public ICollection<EventParticipant> Events { get; set; }
 }
