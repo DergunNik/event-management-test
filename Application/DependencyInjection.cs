@@ -12,7 +12,8 @@ public static class DependencyInjection
         services.Configure<AuthOptions>(configuration.GetSection("AuthOptions"))
                 .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IPasswordHasher, Argon2PasswordHasher>()
-                .AddScoped<ITokenProvider, TokenProvider>();
+                .AddScoped<ITokenProvider, TokenProvider>()
+                .AddScoped<IRefreshTokenCleaner, RefreshTokenCleaner>();
         return services;
     }
 }

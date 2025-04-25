@@ -2,5 +2,5 @@
 
 public class AuthOptions
 {
-    public int sosal;
+    
 }

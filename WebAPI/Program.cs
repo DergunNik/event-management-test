@@ -1,9 +1,9 @@
 using Application;
-using Application.Options;
 using Infrastructure;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using WebAPI.Daemons;
 using WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +22,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddPersistence(builder.Configuration)
-                .AddApplication(builder.Configuration);
+                .AddApplication(builder.Configuration)
+                .AddHostedService<TokenCleanerDaemon>();
 
 var app = builder.Build();
 
