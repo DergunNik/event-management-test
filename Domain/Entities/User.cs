@@ -12,5 +12,5 @@ public class User : Entity
     public UserRole UserRole { get; set; }
     public string PasswordHash { get; set; }
     
-    public ICollection<EventParticipant> Events { get; set; }
+    public ICollection<Participant> Events { get; set; }
 }

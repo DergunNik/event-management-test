@@ -1,6 +1,6 @@
 ﻿namespace Domain.Entities;
 
-public class EventParticipant : Entity
+public class Participant : Entity
 {
     public int EventId { get; set; }
     public Event Event { get; set; }

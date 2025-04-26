@@ -30,7 +30,8 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
             
         builder.HasOne(e => e.Category)
             .WithMany(c => c.Events)
-            .HasForeignKey(e => e.CategoryId);
+            .HasForeignKey(e => e.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
             
         builder.HasIndex(e => e.DateTime);
         

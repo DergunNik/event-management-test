@@ -1,16 +1,12 @@
-﻿namespace Domain.Entities;
+﻿namespace Application.Dtos.EventUsers;
 
-public class Event : Entity
+public class EventRequestDto
 {
+    public int Id { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
     public string Location { get; set; }
     public DateTime DateTime { get; set; }
     public int MaxParticipants { get; set; }
-    public string? ImagePath { get; set; }
-
     public int CategoryId { get; set; }
-    public Category Category { get; set; }
-    
-    public ICollection<Participant> Participants { get; set; } = new List<Participant>();
 }

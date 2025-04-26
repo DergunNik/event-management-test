@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Data.Configurations;
 
-public class EventParticipantConfiguration : IEntityTypeConfiguration<EventParticipant>
+public class ParticipantConfiguration : IEntityTypeConfiguration<Participant>
 {
-    public void Configure(EntityTypeBuilder<EventParticipant> builder)
+    public void Configure(EntityTypeBuilder<Participant> builder)
     {
         builder.HasKey(ep => ep.Id);
 
