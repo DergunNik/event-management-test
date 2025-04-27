@@ -1,7 +1,7 @@
 ﻿namespace Application.Dtos.Participant;
 
-public class ManageParticipantResponse(bool isAdded, string? description = null)
+public class ManageParticipantResponse(bool success, string? description = null)
 {
-    public bool IsAdded { get; set; } = isAdded;
+    public bool Success { get; set; } = success;
     public string? ErrorDescription { get; set; } = description;
 }

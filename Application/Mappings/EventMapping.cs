@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Event;
+using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
 
@@ -26,5 +27,8 @@ public class EventMapping : IRegister
             .Ignore(dest => dest.Participants);
         
         config.NewConfig<Event, EventDto>();
+        
+        config.NewConfig<PagedResult<Event>, EventPageDto>()
+            .Ignore(dest => dest.Events);
     }
 }

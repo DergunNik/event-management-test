@@ -1,4 +1,5 @@
-﻿using Application.Dtos.Category;
+﻿using System.Linq.Expressions;
+using Application.Dtos.Category;
 using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
@@ -11,6 +12,33 @@ public class CategoryService(IUnitOfWork unitOfWork) : ICategoryService
     {
         var categories = await unitOfWork.GetRepository<Category>().ListAllAsync(cancellationToken);
         return categories.Adapt<IEnumerable<CategoryDto>>();
+    }
+
+    public async Task<CategoryPageDto> GetEventsPageAsync(
+        Expression<Func<Category, bool>> filter, 
+        CategoryPaginationDto paginationDto,
+        CancellationToken cancellationToken = default)
+    {
+        Func<IQueryable<Category>, IOrderedQueryable<Category>>? orderBy = paginationDto.Descending
+            ? q => q.OrderByDescending(c => c.Name)
+            : q => q.OrderBy(c => c.Name);
+        
+        var pagedResult = await unitOfWork
+            .GetRepository<Category>()
+            .GetPagedAsync(
+                paginationDto.Page,
+                paginationDto.PageSize,
+                filter,
+                orderBy,
+                cancellationToken
+            );
+
+        var categories = pagedResult.Items.Adapt<List<CategoryDto>>();
+
+        var result = pagedResult.Adapt<CategoryPageDto>();
+        result.Categories = categories;
+
+        return result;
     }
 
     public async Task<CategoryDto?> GetCategoryAsync(int categoryId, CancellationToken cancellationToken = default)

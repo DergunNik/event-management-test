@@ -38,6 +38,47 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
         return users.Adapt<IEnumerable<UserDto>>();
     }
 
+    public async Task<UserPageDto> GetEventUsersPageAsync(int eventId, UserPaginationDto paginationDto,
+        CancellationToken cancellationToken = default)
+    {
+        Expression<Func<Participant, bool>> filter = p => p.EventId == eventId;
+
+        Func<IQueryable<Participant>, IOrderedQueryable<Participant>>? orderBy = paginationDto.SortBy switch
+        {
+            UserSortFields.Email => paginationDto.Descending
+                ? q => q.OrderByDescending(p => p.User.Email)
+                : q => q.OrderBy(p => p.User.Email),
+            UserSortFields.DateOfBirth => paginationDto.Descending
+                ? q => q.OrderByDescending(p => p.User.DateOfBirth)
+                : q => q.OrderBy(p => p.User.DateOfBirth),
+            UserSortFields.LastName => paginationDto.Descending
+                ? q => q.OrderByDescending(p => p.User.LastName)
+                : q => q.OrderBy(p => p.User.LastName),
+            _ => null
+        };
+
+        var pagedResult = await unitOfWork
+            .GetRepository<Participant>()
+            .GetPagedAsync(
+                paginationDto.Page,
+                paginationDto.PageSize,
+                filter,
+                orderBy,
+                cancellationToken,
+                p => p.User
+            );
+
+        var users = pagedResult.Items
+            .Select(p => p.User)
+            .Where(u => u != null)
+            .Adapt<List<UserDto>>();
+
+        var result = pagedResult.Adapt<UserPageDto>();
+        result.Users = users;
+        
+        return result;
+    }
+
     public async Task<ManageParticipantResponse> AddParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)
     {
         var (responce, user, @event, _) = await GetEntities(userId, eventId);

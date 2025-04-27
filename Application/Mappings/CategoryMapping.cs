@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.Category;
+using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
 
@@ -19,5 +20,8 @@ public class CategoryMapping : IRegister
         config.NewConfig<Category, CategoryCreateDto>();
         
         config.NewConfig<CategoryCreateDto, Category>();
+        
+        config.NewConfig<PagedResult<Category>, CategoryPageDto>()
+            .Ignore(dest => dest.Categories);
     }
 }

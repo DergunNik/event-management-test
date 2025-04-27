@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.User;
+using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
 
@@ -30,5 +31,8 @@ public class UserMapping : IRegister
             .Ignore(dest => dest.Events);
         
         config.NewConfig<User, UserDto>();
+        
+        config.NewConfig<PagedResult<Participant>, UserPageDto>()
+            .Ignore(dest => dest.Users);
     }
 }

@@ -6,7 +6,6 @@ using Domain.Entities;
 using Mapster;
 using Microsoft.Extensions.Options;
 
-
 namespace Application.Services;
 
 public class AuthService(
@@ -66,10 +65,10 @@ public class AuthService(
         };
     }
 
-    public async Task<AuthResponse> LoginWithRefreshAsync(string refreshToken)
+    public async Task<AuthResponse> LoginWithRefreshAsync(RefreshRequest refreshRequest)
     {
         var repository = unitOfWork.GetRepository<RefreshToken>();
-        var token = await repository.FirstOrDefaultAsync(rt => rt.Token == refreshToken,
+        var token = await repository.FirstOrDefaultAsync(rt => rt.Token == refreshRequest.RefreshToken,
             includesProperties: rt => rt.User);
         
         if (token is null)

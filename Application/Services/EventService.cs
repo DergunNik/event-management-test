@@ -25,6 +25,43 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         return events.Adapt<IEnumerable<EventDto>>();
     }
 
+    public async Task<EventPageDto> GetEventsPageAsync(Expression<Func<Event, bool>> filter, EventPaginationDto paginationDto,
+        CancellationToken cancellationToken = default)
+    {
+        Func<IQueryable<Event>, IOrderedQueryable<Event>>? orderBy = paginationDto.SortBy switch
+        {
+            EventSortFields.Title => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.Title)
+                : q => q.OrderBy(e => e.Title),
+            EventSortFields.Location => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.Location)
+                : q => q.OrderBy(e => e.Location),
+            EventSortFields.DateTime => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.DateTime)
+                : q => q.OrderBy(e => e.DateTime),
+            EventSortFields.MaxParticipants => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.MaxParticipants)
+                : q => q.OrderBy(e => e.MaxParticipants),
+            _ => null
+        };
+
+        var pagedResult = await unitOfWork
+            .GetRepository<Event>()
+            .GetPagedAsync(
+                paginationDto.Page,
+                paginationDto.PageSize,
+                filter,
+                orderBy,
+                cancellationToken
+            );
+
+        var events = pagedResult.Items.Adapt<List<EventDto>>();
+        
+        var result = pagedResult.Adapt<EventPageDto>();
+        result.Events = events;
+
+        return result;
+    }
     public async Task<EventDto?> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
