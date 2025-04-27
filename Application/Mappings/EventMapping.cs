@@ -1,4 +1,4 @@
-﻿using Application.Dtos.EventUsers;
+﻿using Application.Dtos.Event;
 using Domain.Entities;
 using Mapster;
 
@@ -8,11 +8,23 @@ public class EventMapping : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<EventRequestDto, Event>()
+        config.NewConfig<EventCreateDto, Event>()
             .Map(dest => dest.ImagePath, src => string.Empty) 
             .Ignore(dest => dest.Category) 
             .Ignore(dest => dest.Participants);
         
-        config.NewConfig<Event, EventRequestDto>();
+        config.NewConfig<Event, EventCreateDto>();
+        
+        config.NewConfig<EventUpdateDto, Event>()
+            .Ignore(dest => dest.Category) 
+            .Ignore(dest => dest.Participants);
+        
+        config.NewConfig<Event, EventUpdateDto>();
+        
+        config.NewConfig<EventDto, Event>()
+            .Ignore(dest => dest.Category) 
+            .Ignore(dest => dest.Participants);
+        
+        config.NewConfig<Event, EventDto>();
     }
 }

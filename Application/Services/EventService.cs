@@ -1,5 +1,5 @@
 ﻿using System.Linq.Expressions;
-using Application.Dtos.EventUsers;
+using Application.Dtos.Event;
 using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
@@ -11,39 +11,42 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
 {
     private readonly string _imageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
-    public async Task<IEnumerable<Event>> GetAllEventsAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<EventDto>> GetAllEventsAsync(CancellationToken cancellationToken = default)
     {
-        return await unitOfWork.GetRepository<Event>().ListAllAsync(cancellationToken);
+        var events = await unitOfWork.GetRepository<Event>().ListAllAsync(cancellationToken);
+        return events.Adapt<IEnumerable<EventDto>>();
     }
 
-    public async Task<IEnumerable<Event>> GetEventsAsync(
+    public async Task<IEnumerable<EventDto>> GetEventsAsync(
         Expression<Func<Event, bool>> filter, 
         CancellationToken cancellationToken = default)
     {
-        return await unitOfWork.GetRepository<Event>().ListAsync(filter, cancellationToken);
+        var events = await unitOfWork.GetRepository<Event>().ListAsync(filter, cancellationToken);
+        return events.Adapt<IEnumerable<EventDto>>();
     }
 
-    public async Task<Event?> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<EventDto?> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
-        return await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
+        var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
+        return @event?.Adapt<EventDto>();
     }
 
-    public async Task AddEventAsync(EventRequestDto eventRequestDto, CancellationToken cancellationToken = default)
+    public async Task AddEventAsync(EventCreateDto eventCreateDto, CancellationToken cancellationToken = default)
     {
-        await ThrowIfInvalidCategory(eventRequestDto.CategoryId, cancellationToken);
+        await ThrowIfInvalidCategory(eventCreateDto.CategoryId, cancellationToken);
         
-        var @event = eventRequestDto.Adapt<Event>();
+        var @event = eventCreateDto.Adapt<Event>();
         await unitOfWork.GetRepository<Event>().AddAsync(@event, cancellationToken);
         await unitOfWork.SaveChangesAsync();
     }
 
-    public async Task UpdateEventAsync(EventRequestDto eventRequestDto, CancellationToken cancellationToken = default)
+    public async Task UpdateEventAsync(EventUpdateDto eventUpdateDto, CancellationToken cancellationToken = default)
     {
-        await ThrowIfInvalidCategory(eventRequestDto.CategoryId, cancellationToken);
+        await ThrowIfInvalidCategory(eventUpdateDto.CategoryId, cancellationToken);
 
-        var fromBd = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventRequestDto.Id, cancellationToken)
+        var fromBd = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventUpdateDto.Id, cancellationToken)
             ?? throw new NullReferenceException("Event not found.");
-        eventRequestDto.Adapt(fromBd);
+        eventUpdateDto.Adapt(fromBd);
         await unitOfWork.GetRepository<Event>().UpdateAsync(fromBd, cancellationToken);
         await unitOfWork.SaveChangesAsync();
     }

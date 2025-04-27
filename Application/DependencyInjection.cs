@@ -13,7 +13,10 @@ public static class DependencyInjection
                 .AddScoped<IAuthService, AuthService>()
                 .AddScoped<IPasswordHasher, Argon2PasswordHasher>()
                 .AddScoped<ITokenProvider, TokenProvider>()
-                .AddScoped<IRefreshTokenCleaner, RefreshTokenCleaner>();
+                .AddScoped<IRefreshTokenCleaner, RefreshTokenCleaner>()
+                .AddScoped<IUserService, UserService>()
+                .AddScoped<ICategoryService, CategoryService>()
+                .AddScoped<IEventService, EventService>();
         return services;
     }
 }

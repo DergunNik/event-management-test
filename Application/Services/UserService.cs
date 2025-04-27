@@ -1,13 +1,16 @@
-﻿using Application.Dtos.EventUsers;
+﻿using System.Linq.Expressions;
+using Application.Dtos.Participant;
+using Application.Dtos.User;
 using Domain.Abstractions;
 using Domain.Entities;
 using Domain.Enums;
+using Mapster;
 
 namespace Application.Services;
 
 public class UserService(IUnitOfWork unitOfWork) : IUserService
 {
-    public async Task<IEnumerable<User>> GetEventUsersAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var participants = 
             await unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
@@ -16,16 +19,23 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
         userTasks.AddRange(participants.Select(
             p => unitOfWork.GetRepository<User>().GetByIdAsync(p.UserId, cancellationToken)));
 
-        Task.WaitAll(userTasks, cancellationToken);
+        await Task.WhenAll(userTasks);
 
         List<User> users = [];
         users.AddRange(userTasks.Select(ut => ut.Result).Where(ut => ut is not null));
-        return users;
+        return users.Adapt<IEnumerable<UserDto>>();
     }
 
-    public async Task<User?> GetUserAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<UserDto?> GetUserAsync(int userId, CancellationToken cancellationToken = default)
     {
-        return await unitOfWork.GetRepository<User>().GetByIdAsync(userId, cancellationToken);
+        var user = await unitOfWork.GetRepository<User>().GetByIdAsync(userId, cancellationToken);
+        return user?.Adapt<UserDto>();
+    }
+
+    public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter, CancellationToken cancellationToken = default)
+    {
+        var users = await unitOfWork.GetRepository<User>().ListAsync(filter, cancellationToken);
+        return users.Adapt<IEnumerable<UserDto>>();
     }
 
     public async Task<ManageParticipantResponse> AddParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)

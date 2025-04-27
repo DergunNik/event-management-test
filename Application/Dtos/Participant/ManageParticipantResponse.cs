@@ -1,4 +1,4 @@
-﻿namespace Application.Dtos.EventUsers;
+﻿namespace Application.Dtos.Participant;
 
 public class ManageParticipantResponse(bool isAdded, string? description = null)
 {

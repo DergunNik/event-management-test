@@ -1,0 +1,13 @@
+﻿using Application.Dtos.Category;
+using Domain.Entities;
+
+namespace Application.Services;
+
+public interface ICategoryService
+{
+    Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
+    Task<CategoryDto?> GetCategoryAsync(int categoryId, CancellationToken cancellationToken = default);
+    Task AddCategoryAsync(CategoryCreateDto categoryDto, CancellationToken cancellationToken = default);
+    Task UpdateCategoryAsync(CategoryUpdateDto categoryDto, CancellationToken cancellationToken = default);
+    Task DeleteCategoryAsync(int categoryId, CancellationToken cancellationToken = default);
+}
