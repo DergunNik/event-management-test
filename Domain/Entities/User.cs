@@ -13,4 +13,5 @@ public class User : Entity
     public string PasswordHash { get; set; }
     
     public ICollection<Participant> Events { get; set; }
+    public ICollection<RefreshToken> RefreshTokens { get; set; }
 }

@@ -1,5 +1,4 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -7,9 +6,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+
 COPY ["WebAPI/WebAPI.csproj", "WebAPI/"]
+COPY ["Application/Application.csproj", "Application/"]
+COPY ["Domain/Domain.csproj", "Domain/"]
+COPY ["Persistence/Persistence.csproj", "Persistence/"]
+
 RUN dotnet restore "WebAPI/WebAPI.csproj"
+
 COPY . .
+
 WORKDIR "/src/WebAPI"
 RUN dotnet build "WebAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 

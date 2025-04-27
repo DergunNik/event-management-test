@@ -57,6 +57,6 @@ public class Argon2PasswordHasher(IOptions<HashOptions> options) : IPasswordHash
         argon2.DegreeOfParallelism = options.Value.DegreeOfParallelism;
         argon2.Salt = salt;
         var newHash = await argon2.GetBytesAsync(options.Value.PasswordHashSize);
-        return passwordHash == newHash;
+        return passwordHash.SequenceEqual(newHash);
     }
 }

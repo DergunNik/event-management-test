@@ -23,6 +23,7 @@ public class AuthService(
         }
 
         var user = registrationDto.Adapt<User>();
+        user.PasswordHash = await passwordHasher.HashAsync(registrationDto.Password);
         await unitOfWork.GetRepository<User>().AddAsync(user);
         await unitOfWork.SaveChangesAsync();
         
