@@ -12,6 +12,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../WebAPI"))
             .AddJsonFile("appsettings.Development.json", optional: true)
             .AddJsonFile("appsettings.json", optional: true)
+            .AddEnvironmentVariables()
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
