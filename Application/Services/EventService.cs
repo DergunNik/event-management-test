@@ -99,7 +99,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task SetEventImageAsync(int eventId, IFormFile image, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
-                     ?? throw new NullReferenceException("Event not found.");
+            ?? throw new NullReferenceException("Event not found.");
 
         var fileName = $"event_{eventId}{Path.GetExtension(image.FileName)}";
         var filePath = Path.Combine(_imageDirectory, fileName);
@@ -117,7 +117,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task<string?> GetEventImageAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
-                     ?? throw new NullReferenceException("Event not found.");
+            ?? throw new NullReferenceException("Event not found.");
 
         return @event.ImagePath ?? null;
     }

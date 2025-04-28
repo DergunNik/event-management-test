@@ -81,7 +81,7 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
     public async Task<ManageParticipantResponse> AddParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)
     {
-        var (responce, user, @event, _) = await GetEntities(userId, eventId);
+        var (responce, _, @event, _) = await GetEntities(userId, eventId);
         if (responce is not null)
         {
             return responce;
@@ -108,7 +108,7 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
     public async Task<ManageParticipantResponse> RemoveParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)
     {
-        var (responce, user, @event, participant) = await GetEntities(userId, eventId);
+        var (responce, _, _, participant) = await GetEntities(userId, eventId);
         if (responce is not null)
         {
             return responce;

@@ -92,18 +92,29 @@ public class EventController(IEventService eventService) : ControllerBase
         return Ok(eventsPage);
     }
 
-    [HttpPost("filter")]
+    [HttpGet("filter")]
     public async Task<ActionResult<EventPageDto>> GetEventsByFilterPaged(
         [FromQuery] DateTime? fromDate,
         [FromQuery] DateTime? toDate,
         [FromQuery] string? location,
         [FromQuery] int? categoryId,
-        [FromBody] EventPaginationDto pagination,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] EventSortFields sortBy = EventSortFields.DateTime,
+        [FromQuery] bool descending = false,
         CancellationToken cancellationToken = default)
     {
-        if (fromDate > toDate)
+        if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
         {
             return BadRequest("fromDate must be less than or equal to toDate.");
+        }
+        if (page < 1)
+        {
+            return BadRequest("page must be at least 1.");
+        }
+        if (pageSize < 1)
+        {
+            return BadRequest("pageSize must be greater than 0.");
         }
 
         Expression<Func<Event, bool>> filter = e =>
@@ -111,6 +122,14 @@ public class EventController(IEventService eventService) : ControllerBase
             (!toDate.HasValue || e.DateTime.Date <= toDate.Value.Date) &&
             (string.IsNullOrEmpty(location) || e.Location.Contains(location)) &&
             (!categoryId.HasValue || e.CategoryId == categoryId);
+
+        var pagination = new EventPaginationDto
+        {
+            Page = page,
+            PageSize = pageSize,
+            SortBy = sortBy,
+            Descending = descending
+        };
 
         var eventsPage = await eventService.GetEventsPageAsync(filter, pagination, cancellationToken);
         return Ok(eventsPage);
