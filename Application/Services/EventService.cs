@@ -18,32 +18,18 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     }
 
     public async Task<IEnumerable<EventDto>> GetEventsAsync(
-        Expression<Func<Event, bool>> filter, 
+        Expression<Func<Event, bool>> filter,
         CancellationToken cancellationToken = default)
     {
         var events = await unitOfWork.GetRepository<Event>().ListAsync(filter, cancellationToken);
         return events.Adapt<IEnumerable<EventDto>>();
     }
 
-    public async Task<EventPageDto> GetEventsPageAsync(Expression<Func<Event, bool>> filter, EventPaginationDto paginationDto,
+    public async Task<EventPageDto> GetEventsPageAsync(EventFilterDto filterDto, EventPaginationDto paginationDto,
         CancellationToken cancellationToken = default)
     {
-        Func<IQueryable<Event>, IOrderedQueryable<Event>>? orderBy = paginationDto.SortBy switch
-        {
-            EventSortFields.Title => paginationDto.Descending
-                ? q => q.OrderByDescending(e => e.Title)
-                : q => q.OrderBy(e => e.Title),
-            EventSortFields.Location => paginationDto.Descending
-                ? q => q.OrderByDescending(e => e.Location)
-                : q => q.OrderBy(e => e.Location),
-            EventSortFields.DateTime => paginationDto.Descending
-                ? q => q.OrderByDescending(e => e.DateTime)
-                : q => q.OrderBy(e => e.DateTime),
-            EventSortFields.MaxParticipants => paginationDto.Descending
-                ? q => q.OrderByDescending(e => e.MaxParticipants)
-                : q => q.OrderBy(e => e.MaxParticipants),
-            _ => null
-        };
+        var filter = CreateFilter(filterDto);
+        var orderBy = CreateOrderBy(paginationDto);
 
         var pagedResult = await unitOfWork
             .GetRepository<Event>()
@@ -56,12 +42,13 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
             );
 
         var events = pagedResult.Items.Adapt<List<EventDto>>();
-        
+
         var result = pagedResult.Adapt<EventPageDto>();
         result.Events = events;
 
         return result;
     }
+
     public async Task<EventDto?> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
@@ -71,7 +58,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task AddEventAsync(EventCreateDto eventCreateDto, CancellationToken cancellationToken = default)
     {
         await ThrowIfInvalidCategory(eventCreateDto.CategoryId, cancellationToken);
-        
+
         var @event = eventCreateDto.Adapt<Event>();
         await unitOfWork.GetRepository<Event>().AddAsync(@event, cancellationToken);
         await unitOfWork.SaveChangesAsync();
@@ -82,7 +69,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         await ThrowIfInvalidCategory(eventUpdateDto.CategoryId, cancellationToken);
 
         var fromBd = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventUpdateDto.Id, cancellationToken)
-            ?? throw new NullReferenceException("Event not found.");
+                     ?? throw new NullReferenceException("Event not found.");
         eventUpdateDto.Adapt(fromBd);
         await unitOfWork.GetRepository<Event>().UpdateAsync(fromBd, cancellationToken);
         await unitOfWork.SaveChangesAsync();
@@ -91,7 +78,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task DeleteEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
-            ?? throw new NullReferenceException("Event not found.");
+                     ?? throw new NullReferenceException("Event not found.");
         await unitOfWork.GetRepository<Event>().DeleteAsync(@event, cancellationToken);
         await unitOfWork.SaveChangesAsync();
     }
@@ -99,7 +86,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task SetEventImageAsync(int eventId, IFormFile image, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
-            ?? throw new NullReferenceException("Event not found.");
+                     ?? throw new NullReferenceException("Event not found.");
 
         var fileName = $"event_{eventId}{Path.GetExtension(image.FileName)}";
         var filePath = Path.Combine(_imageDirectory, fileName);
@@ -117,16 +104,44 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     public async Task<string?> GetEventImageAsync(int eventId, CancellationToken cancellationToken = default)
     {
         var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
-            ?? throw new NullReferenceException("Event not found.");
+                     ?? throw new NullReferenceException("Event not found.");
 
         return @event.ImagePath ?? null;
     }
 
+    private static Func<IQueryable<Event>, IOrderedQueryable<Event>>? CreateOrderBy(EventPaginationDto paginationDto)
+    {
+        return paginationDto.SortBy switch
+        {
+            EventSortFields.Title => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.Title)
+                : q => q.OrderBy(e => e.Title),
+            EventSortFields.Location => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.Location)
+                : q => q.OrderBy(e => e.Location),
+            EventSortFields.DateTime => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.DateTime)
+                : q => q.OrderBy(e => e.DateTime),
+            EventSortFields.MaxParticipants => paginationDto.Descending
+                ? q => q.OrderByDescending(e => e.MaxParticipants)
+                : q => q.OrderBy(e => e.MaxParticipants),
+            _ => null
+        };
+    }
+
+    private static Expression<Func<Event, bool>> CreateFilter(EventFilterDto filterDto)
+    {
+        return e =>
+            (filterDto.Title == null || e.Title.Contains(filterDto.Title)) &&
+            (filterDto.FromDate == null || e.DateTime >= filterDto.FromDate) &&
+            (filterDto.ToDate == null || e.DateTime <= filterDto.ToDate) &&
+            (filterDto.Location == null || e.Location.Contains(filterDto.Location)) &&
+            (filterDto.CategoryId == null || e.CategoryId == filterDto.CategoryId);
+    }
+    
     private async Task ThrowIfInvalidCategory(int categoryId, CancellationToken cancellationToken = default)
     {
         if (await unitOfWork.GetRepository<Category>().GetByIdAsync(categoryId, cancellationToken) == null)
-        {
             throw new NullReferenceException("Invalid event category id.");
-        }
     }
 }

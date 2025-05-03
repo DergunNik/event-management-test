@@ -10,21 +10,28 @@ namespace Infrastructure.EFCore;
 public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) : IUnitOfWork
 {
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
-    private IDbContextTransaction? _currentTransaction; 
+    private IDbContextTransaction? _currentTransaction;
 
-    public IRepository<T> GetRepository<T>() where T : Entity 
+    public IRepository<T> GetRepository<T>() where T : Entity
     {
         return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new EfcRepository<T>(context));
     }
 
-    public async Task CreateDataBaseAsync() => await context.Database.EnsureCreatedAsync();
-    public async Task DeleteDataBaseAsync() => await context.Database.EnsureDeletedAsync();
+    public async Task CreateDataBaseAsync()
+    {
+        await context.Database.EnsureCreatedAsync();
+    }
+
+    public async Task DeleteDataBaseAsync()
+    {
+        await context.Database.EnsureDeletedAsync();
+    }
 
     public async Task SaveChangesAsync()
     {
         await context.SaveChangesAsync();
     }
-    
+
     public void BeginTransaction()
     {
         _currentTransaction = context.Database.BeginTransaction();
@@ -33,7 +40,6 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
     public async Task CommitTransactionAsync()
     {
         if (_currentTransaction != null)
-        {
             try
             {
                 await _currentTransaction.CommitAsync();
@@ -42,19 +48,17 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
             {
                 logger.LogError("Commit transaction error: {err}", e.Message);
                 await RollbackTransactionAsync();
-                throw; 
+                throw;
             }
             finally
             {
                 _currentTransaction = null;
             }
-        }
     }
 
     public async Task RollbackTransactionAsync()
     {
         if (_currentTransaction != null)
-        {
             try
             {
                 await _currentTransaction.RollbackAsync();
@@ -62,12 +66,11 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
             catch (Exception e)
             {
                 logger.LogError("Rollback transaction error: {err}", e.Message);
-                throw; 
+                throw;
             }
             finally
             {
                 _currentTransaction = null;
             }
-        }
     }
 }

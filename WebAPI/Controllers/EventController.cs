@@ -1,10 +1,10 @@
-﻿using Application.Dtos.Event;
+﻿using System.Linq.Expressions;
+using Application.Dtos.Event;
 using Application.Services;
+using Asp.Versioning;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq.Expressions;
-using Asp.Versioning;
 
 namespace WebAPI.Controllers;
 
@@ -15,32 +15,11 @@ namespace WebAPI.Controllers;
 public class EventController(IEventService eventService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<EventPageDto>> GetAllEventsPaged(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] EventSortFields sortBy = EventSortFields.DateTime,
-        [FromQuery] bool descending = false,
+    public async Task<ActionResult<EventPageDto>> GetAllEventsPaged([FromQuery] EventPaginationDto dto,
         CancellationToken cancellationToken = default)
     {
-        if (page < 1)
-        {
-            return BadRequest("Page number must be greater than 0.");
-        }
-        if (pageSize < 1)
-        {
-            return BadRequest("Page size must be greater than 0.");
-        }
-
-        var pagination = new EventPaginationDto
-        {
-            Page = page,
-            PageSize = pageSize,
-            SortBy = sortBy,
-            Descending = descending
-        };
-
-        Expression<Func<Event, bool>> filter = _ => true;
-        var eventsPage = await eventService.GetEventsPageAsync(filter, pagination, cancellationToken);
+        var filter = new EventFilterDto();
+        var eventsPage = await eventService.GetEventsPageAsync(filter, dto, cancellationToken);
         return Ok(eventsPage);
     }
 
@@ -48,96 +27,35 @@ public class EventController(IEventService eventService) : ControllerBase
     public async Task<ActionResult<EventDto>> GetEventById(int eventId, CancellationToken cancellationToken = default)
     {
         var ev = await eventService.GetEventAsync(eventId, cancellationToken);
-        if (ev is null)
-        {
-            return NotFound();
-        }
-
+        if (ev is null) return NotFound();
         return Ok(ev);
     }
 
     [HttpGet("title/{title}")]
     public async Task<ActionResult<EventPageDto>> GetEventsByTitlePaged(
         string title,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] EventSortFields sortBy = EventSortFields.DateTime,
-        [FromQuery] bool descending = false,
+        [FromQuery] EventPaginationDto dto,
         CancellationToken cancellationToken = default)
     {
-        if (page < 1)
-        {
-            return BadRequest("Page number must be greater than 0.");
-        }
-        if (pageSize < 1)
-        {
-            return BadRequest("Page size must be greater than 0.");
-        }
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            return BadRequest("Title cannot be empty.");
-        }
-
-        var pagination = new EventPaginationDto
-        {
-            Page = page,
-            PageSize = pageSize,
-            SortBy = sortBy,
-            Descending = descending
-        };
-
-        Expression<Func<Event, bool>> filter = e => e.Title.Contains(title);
-
-        var eventsPage = await eventService.GetEventsPageAsync(filter, pagination, cancellationToken);
+        var filter = new EventFilterDto{Title = title};
+        var eventsPage = await eventService.GetEventsPageAsync(filter, dto, cancellationToken);
         return Ok(eventsPage);
     }
 
     [HttpGet("filter")]
     public async Task<ActionResult<EventPageDto>> GetEventsByFilterPaged(
-        [FromQuery] DateTime? fromDate,
-        [FromQuery] DateTime? toDate,
-        [FromQuery] string? location,
-        [FromQuery] int? categoryId,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10,
-        [FromQuery] EventSortFields sortBy = EventSortFields.DateTime,
-        [FromQuery] bool descending = false,
+        [FromQuery] EventPaginationDto paginationDto,
+        [FromQuery] EventFilterDto filterDto,
         CancellationToken cancellationToken = default)
     {
-        if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
-        {
-            return BadRequest("fromDate must be less than or equal to toDate.");
-        }
-        if (page < 1)
-        {
-            return BadRequest("page must be at least 1.");
-        }
-        if (pageSize < 1)
-        {
-            return BadRequest("pageSize must be greater than 0.");
-        }
-
-        Expression<Func<Event, bool>> filter = e =>
-            (!fromDate.HasValue || e.DateTime.Date >= fromDate.Value.Date) &&
-            (!toDate.HasValue || e.DateTime.Date <= toDate.Value.Date) &&
-            (string.IsNullOrEmpty(location) || e.Location.Contains(location)) &&
-            (!categoryId.HasValue || e.CategoryId == categoryId);
-
-        var pagination = new EventPaginationDto
-        {
-            Page = page,
-            PageSize = pageSize,
-            SortBy = sortBy,
-            Descending = descending
-        };
-
-        var eventsPage = await eventService.GetEventsPageAsync(filter, pagination, cancellationToken);
+        var eventsPage = await eventService.GetEventsPageAsync(filterDto, paginationDto, cancellationToken);
         return Ok(eventsPage);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<IActionResult> AddEvent([FromBody] EventCreateDto dto, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> AddEvent([FromBody] EventCreateDto dto,
+        CancellationToken cancellationToken = default)
     {
         await eventService.AddEventAsync(dto, cancellationToken);
         return StatusCode(201);
@@ -145,7 +63,8 @@ public class EventController(IEventService eventService) : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPut]
-    public async Task<IActionResult> UpdateEvent([FromBody] EventUpdateDto dto, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UpdateEvent([FromBody] EventUpdateDto dto,
+        CancellationToken cancellationToken = default)
     {
         await eventService.UpdateEventAsync(dto, cancellationToken);
         return NoContent();
@@ -161,13 +80,11 @@ public class EventController(IEventService eventService) : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPost("{eventId:int}/image")]
-    public async Task<IActionResult> UploadEventImage(int eventId, IFormFile image, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> UploadEventImage(int eventId, IFormFile image,
+        CancellationToken cancellationToken = default)
     {
-        if (image.Length == 0)
-        {
-            return BadRequest("No image provided.");
-        }
-
+        if (image.Length == 0) return BadRequest("No image provided.");
+        
         await eventService.SetEventImageAsync(eventId, image, cancellationToken);
         return Ok();
     }
@@ -176,10 +93,7 @@ public class EventController(IEventService eventService) : ControllerBase
     public async Task<ActionResult<string>> GetEventImage(int eventId, CancellationToken cancellationToken = default)
     {
         var path = await eventService.GetEventImageAsync(eventId, cancellationToken);
-        if (path is null)
-        {
-            return NotFound();
-        }
+        if (path is null) return NotFound();
 
         return Ok(path);
     }

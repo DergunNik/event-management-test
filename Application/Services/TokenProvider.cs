@@ -1,9 +1,9 @@
-﻿using System.Security.Claims;
-using System.Text;
-using Domain.Entities;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using Application.Options;
+using Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -24,12 +24,12 @@ public class TokenProvider(IOptions<TokensOptions> options) : ITokenProvider
             claims: claims,
             issuer: options.Value.Issuer,
             audience: options.Value.Audience,
-            signingCredentials: 
+            signingCredentials:
             new SigningCredentials(
                 new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(options.Value.Secret)),
                 SecurityAlgorithms.HmacSha256));
-    
+
         return new JwtSecurityTokenHandler().WriteToken(jwtToken);
     }
 

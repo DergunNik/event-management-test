@@ -14,14 +14,16 @@ public class CategoryService(IUnitOfWork unitOfWork) : ICategoryService
         return categories.Adapt<IEnumerable<CategoryDto>>();
     }
 
-    public async Task<CategoryPageDto> GetEventsPageAsync(
-        Expression<Func<Category, bool>> filter, 
-        CategoryPaginationDto paginationDto,
+    public async Task<CategoryPageDto> GetEventsPageAsync(CategoryPaginationDto paginationDto,
         CancellationToken cancellationToken = default)
     {
         Func<IQueryable<Category>, IOrderedQueryable<Category>>? orderBy = paginationDto.Descending
             ? q => q.OrderByDescending(c => c.Name)
             : q => q.OrderBy(c => c.Name);
+
+        Expression<Func<Category, bool>> filter = string.IsNullOrWhiteSpace(paginationDto.Search)
+            ? _ => true
+            : c => c.Name.Contains(paginationDto.Search);
         
         var pagedResult = await unitOfWork
             .GetRepository<Category>()
@@ -57,8 +59,8 @@ public class CategoryService(IUnitOfWork unitOfWork) : ICategoryService
     public async Task UpdateCategoryAsync(CategoryUpdateDto categoryDto, CancellationToken cancellationToken = default)
     {
         var fromDb = await unitOfWork.GetRepository<Category>().GetByIdAsync(categoryDto.Id, cancellationToken)
-            ?? throw new NullReferenceException("Category not found.");
-        
+                     ?? throw new NullReferenceException("Category not found.");
+
         categoryDto.Adapt(fromDb);
         await unitOfWork.GetRepository<Category>().UpdateAsync(fromDb, cancellationToken);
         await unitOfWork.SaveChangesAsync();
@@ -67,8 +69,8 @@ public class CategoryService(IUnitOfWork unitOfWork) : ICategoryService
     public async Task DeleteCategoryAsync(int categoryId, CancellationToken cancellationToken = default)
     {
         var category = await unitOfWork.GetRepository<Category>().GetByIdAsync(categoryId, cancellationToken)
-            ?? throw new NullReferenceException("Category not found.");
-        
+                       ?? throw new NullReferenceException("Category not found.");
+
         await unitOfWork.GetRepository<Category>().DeleteAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync();
     }

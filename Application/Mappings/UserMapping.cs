@@ -16,8 +16,8 @@ public class UserMapping : IRegister
             .Ignore(dest => dest.RefreshTokens);
 
         config.NewConfig<User, UserCreateDto>()
-            .Ignore(dest => dest.IsEmailConfirmed); 
-        
+            .Ignore(dest => dest.IsEmailConfirmed);
+
         config.NewConfig<UserUpdateDto, User>()
             .Ignore(dest => dest.Email)
             .Ignore(dest => dest.IsEmailConfirmed)
@@ -25,16 +25,16 @@ public class UserMapping : IRegister
             .Ignore(dest => dest.PasswordHash)
             .Ignore(dest => dest.Events)
             .Ignore(dest => dest.RefreshTokens);
-        
+
         config.NewConfig<User, UserUpdateDto>();
-        
+
         config.NewConfig<UserDto, User>()
             .Ignore(dest => dest.PasswordHash)
             .Ignore(dest => dest.Events)
             .Ignore(dest => dest.RefreshTokens);
-        
+
         config.NewConfig<User, UserDto>();
-        
+
         config.NewConfig<PagedResult<Participant>, UserPageDto>()
             .Ignore(dest => dest.Users);
     }

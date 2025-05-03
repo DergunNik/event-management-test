@@ -10,9 +10,10 @@ namespace Application.Services;
 
 public class UserService(IUnitOfWork unitOfWork) : IUserService
 {
-    public async Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId,
+        CancellationToken cancellationToken = default)
     {
-        var participants = 
+        var participants =
             await unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
 
         List<Task<User?>> userTasks = [];
@@ -32,7 +33,8 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
         return user?.Adapt<UserDto>();
     }
 
-    public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter,
+        CancellationToken cancellationToken = default)
     {
         var users = await unitOfWork.GetRepository<User>().ListAsync(filter, cancellationToken);
         return users.Adapt<IEnumerable<UserDto>>();
@@ -75,26 +77,22 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
         var result = pagedResult.Adapt<UserPageDto>();
         result.Users = users;
-        
+
         return result;
     }
 
-    public async Task<ManageParticipantResponse> AddParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)
+    public async Task<ManageParticipantResponse> AddParticipantAsync(int userId, int eventId,
+        CancellationToken cancellationToken = default)
     {
         var (responce, _, @event, _) = await GetEntities(userId, eventId);
-        if (responce is not null)
-        {
-            return responce;
-        }
-        
+        if (responce is not null) return responce;
+
         var participants = await unitOfWork.GetRepository<Participant>()
             .ListAsync(p => p.EventId == eventId, cancellationToken);
 
         if (@event.MaxParticipants < participants.Count)
-        {
             return new ManageParticipantResponse(false, "Already max participant number");
-        }
-        
+
         var participant = new Participant
         {
             EventId = eventId,
@@ -106,18 +104,13 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
         return new ManageParticipantResponse(true);
     }
 
-    public async Task<ManageParticipantResponse> RemoveParticipantAsync(int userId, int eventId, CancellationToken cancellationToken = default)
+    public async Task<ManageParticipantResponse> RemoveParticipantAsync(int userId, int eventId,
+        CancellationToken cancellationToken = default)
     {
         var (responce, _, _, participant) = await GetEntities(userId, eventId);
-        if (responce is not null)
-        {
-            return responce;
-        }
+        if (responce is not null) return responce;
 
-        if (participant is null)
-        {
-            return new ManageParticipantResponse(true);
-        }
+        if (participant is null) return new ManageParticipantResponse(true);
 
         await unitOfWork.GetRepository<Participant>().DeleteAsync(participant, cancellationToken);
         await unitOfWork.SaveChangesAsync();
@@ -135,15 +128,10 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
         var user = await userTask;
         if (user is null || user.UserRole != UserRole.DefaultUser)
-        {
             return (new ManageParticipantResponse(false, "Invalid user id"), null, null, null);
-        }
-        
+
         var @event = await eventTask;
-        if (@event is null) 
-        {
-            return (new ManageParticipantResponse(false, "Invalid event id"), null, null, null);
-        }
+        if (@event is null) return (new ManageParticipantResponse(false, "Invalid event id"), null, null, null);
 
         return (null, user, @event, await participantTask);
     }

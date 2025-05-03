@@ -1,8 +1,10 @@
-using Application;
+using Application.DI;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
-using Infrastructure;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infrastructure.Data;
+using Infrastructure.DI;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using WebAPI.Daemons;
@@ -41,6 +43,8 @@ builder.Services.AddPersistence(builder.Configuration)
     .AddHostedService<TokenCleanerDaemon>()
     .AddTransient<ExceptionHandlerMiddleware>()
     .AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>(); 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -52,12 +56,10 @@ app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
     foreach (var desc in provider.ApiVersionDescriptions)
-    {
         options.SwaggerEndpoint(
             $"/swagger/{desc.GroupName}/swagger.json",
             desc.GroupName.ToUpperInvariant()
         );
-    }
 });
 
 app.UseMiddleware<ExceptionHandlerMiddleware>()

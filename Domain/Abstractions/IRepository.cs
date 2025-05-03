@@ -22,7 +22,7 @@ public interface IRepository<T> where T : Entity
         Expression<Func<T, bool>>? filter = null,
         CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[]? includesProperties);
-    
+
     Task<PagedResult<T>> GetPagedAsync(
         int pageNumber,
         int pageSize,
@@ -42,7 +42,7 @@ public interface IRepository<T> where T : Entity
     Task<int> DeleteWhereAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
 
     Task<T?> FirstOrDefaultAsync(
-        Expression<Func<T, bool>> filter, 
+        Expression<Func<T, bool>> filter,
         CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[]? includesProperties);
 

@@ -8,7 +8,7 @@ public class EfcRepositoryTests
     private static AppDbContext GetInMemoryDbContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase("RepoTestDb_" + System.Guid.NewGuid())
+            .UseInMemoryDatabase("RepoTestDb_" + Guid.NewGuid())
             .Options;
         return new AppDbContext(options);
     }
@@ -24,7 +24,7 @@ public class EfcRepositoryTests
             Title = "RepoTest",
             Description = "Desc",
             Location = "Loc",
-            DateTime = System.DateTime.Now,
+            DateTime = DateTime.Now,
             MaxParticipants = 5,
             CategoryId = 1
         };
@@ -45,7 +45,7 @@ public class EfcRepositoryTests
             Title = "RepoTest2",
             Description = "Desc2",
             Location = "Loc2",
-            DateTime = System.DateTime.Now,
+            DateTime = DateTime.Now,
             MaxParticipants = 10,
             CategoryId = 2
         };
@@ -77,18 +77,15 @@ public class EfcRepositoryTests
         var ev = new Event
         {
             Title = null,
-            Description = "Desc", 
-            Location = "Loc", 
-            DateTime = DateTime.UtcNow, 
-            MaxParticipants = 10, 
+            Description = "Desc",
+            Location = "Loc",
+            DateTime = DateTime.UtcNow,
+            MaxParticipants = 10,
             CategoryId = 1
         };
 
         await repo.AddAsync(ev);
 
-        await Assert.ThrowsAsync<DbUpdateException>(async () =>
-        {
-            await db.SaveChangesAsync();
-        });
+        await Assert.ThrowsAsync<DbUpdateException>(async () => { await db.SaveChangesAsync(); });
     }
 }

@@ -7,6 +7,6 @@ public class Participant : Entity
 
     public int UserId { get; set; }
     public User User { get; set; }
-    
+
     public DateTime RegistrationDate { get; set; }
 }

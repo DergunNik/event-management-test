@@ -16,10 +16,10 @@ public class Argon2PasswordHasher(IOptions<HashOptions> options) : IPasswordHash
         argon2.MemorySize = options.Value.MemorySize;
         argon2.DegreeOfParallelism = options.Value.DegreeOfParallelism;
         argon2.Salt = salt;
-        var hash = argon2.GetBytes(options.Value.PasswordHashSize); 
+        var hash = argon2.GetBytes(options.Value.PasswordHashSize);
         return $"{Convert.ToBase64String(hash)}-{Convert.ToBase64String(salt)}";
     }
-    
+
     public bool Verify(string password, string storedHash)
     {
         var data = storedHash.Split('-');
@@ -33,7 +33,7 @@ public class Argon2PasswordHasher(IOptions<HashOptions> options) : IPasswordHash
         var newHash = argon2.GetBytes(options.Value.PasswordHashSize);
         return passwordHash == newHash;
     }
-    
+
     public async Task<string> HashAsync(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(options.Value.SaltSize);
@@ -42,7 +42,7 @@ public class Argon2PasswordHasher(IOptions<HashOptions> options) : IPasswordHash
         argon2.MemorySize = options.Value.MemorySize;
         argon2.DegreeOfParallelism = options.Value.DegreeOfParallelism;
         argon2.Salt = salt;
-        var hash = await argon2.GetBytesAsync(options.Value.PasswordHashSize); 
+        var hash = await argon2.GetBytesAsync(options.Value.PasswordHashSize);
         return $"{Convert.ToBase64String(hash)}-{Convert.ToBase64String(salt)}";
     }
 

@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Application.Dtos.Auth;
+﻿using Application.Dtos.Auth;
 using Application.Options;
 using Domain.Abstractions;
 using Domain.Entities;
@@ -18,16 +17,14 @@ public class AuthService(
     {
         if (await unitOfWork.GetRepository<User>()
                 .AnyAsync(u => u.Email == registrationDto.Email))
-        {
             throw new InvalidOperationException("Email is already registered.");
-        }
 
         var user = registrationDto.Adapt<User>();
         user.PasswordHash = await passwordHasher.HashAsync(registrationDto.Password);
         await unitOfWork.GetRepository<User>().AddAsync(user);
         await unitOfWork.SaveChangesAsync();
-        
-        return new RegistrationResponse()
+
+        return new RegistrationResponse
         {
             IsEmailConfirmed = user.IsEmailConfirmed,
             UserId = user.Id
@@ -37,19 +34,17 @@ public class AuthService(
     public async Task<AuthResponse> LoginAsync(LoginRequest loginDto)
     {
         var user = await unitOfWork.GetRepository<User>()
-            .FirstOrDefaultAsync(u => u.Email == loginDto.Email)
-            ?? throw new ArgumentException("Invalid email or password.");
-        
+                       .FirstOrDefaultAsync(u => u.Email == loginDto.Email)
+                   ?? throw new ArgumentException("Invalid email or password.");
+
         if (!await passwordHasher.VerifyAsync(loginDto.Password, user.PasswordHash))
-        {
             throw new ArgumentException("Invalid email or password.");
-        }
 
         var jwtToken = tokenProvider.CreateJwt(user);
         var refreshToken = tokenProvider.CreateRefresh();
 
         await unitOfWork.GetRepository<RefreshToken>().AddAsync(
-            new RefreshToken()
+            new RefreshToken
             {
                 Token = refreshToken,
                 ExpiresOnUtc = RefreshExpires(),
@@ -57,7 +52,7 @@ public class AuthService(
             });
         await unitOfWork.SaveChangesAsync();
 
-        return new AuthResponse()
+        return new AuthResponse
         {
             AccessToken = jwtToken,
             RefreshToken = refreshToken,
@@ -71,11 +66,8 @@ public class AuthService(
         var repository = unitOfWork.GetRepository<RefreshToken>();
         var token = await repository.FirstOrDefaultAsync(rt => rt.Token == refreshRequest.RefreshToken,
             includesProperties: rt => rt.User);
-        
-        if (token is null)
-        {
-            throw new ArgumentException("Token is not valid.");
-        }
+
+        if (token is null) throw new ArgumentException("Token is not valid.");
 
         if (token.ExpiresOnUtc < DateTime.UtcNow)
         {
@@ -85,13 +77,13 @@ public class AuthService(
 
         var newRefreshToken = tokenProvider.CreateRefresh();
         var newJwtToken = tokenProvider.CreateJwt(token.User);
-        
+
         token.Token = newRefreshToken;
         token.ExpiresOnUtc = JwtExpires();
-        
+
         await unitOfWork.SaveChangesAsync();
 
-        return new AuthResponse()
+        return new AuthResponse
         {
             AccessToken = newJwtToken,
             RefreshToken = newRefreshToken,
@@ -110,7 +102,7 @@ public class AuthService(
     {
         return DateTime.UtcNow.AddMinutes(tokenOptions.Value.JwtExpirationInMinutes);
     }
-    
+
     private DateTime RefreshExpires()
     {
         return DateTime.UtcNow.AddDays(tokenOptions.Value.RefreshExpirationInDays);

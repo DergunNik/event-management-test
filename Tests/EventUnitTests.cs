@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Application.Dtos.Event;
+using Application.Services;
+using Domain.Abstractions;
+using Domain.Entities;
+using Infrastructure.Data;
+using Infrastructure.EFCore;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Domain.Entities;
-using Domain.Abstractions;
-using Infrastructure.EFCore;
-using Infrastructure.Data;
-using Application.Dtos.Event;
-using Application.Services;
 
 public class EventServiceEfCoreTests
 {
@@ -216,7 +216,7 @@ public class EventServiceEfCoreTests
     {
         var db = GetInMemoryDbContext();
         await using var db1 = db.ConfigureAwait(false);
-        await SeedCategory(db, 1, "Cat");
+        await SeedCategory(db);
         var uow = GetUnitOfWork(db);
         var service = new EventService(uow);
 
@@ -238,7 +238,7 @@ public class EventServiceEfCoreTests
     public async Task UpdateEventAsync_CategoryNotFound_Throws()
     {
         await using var db = GetInMemoryDbContext();
-        await SeedCategory(db, 1, "Cat");
+        await SeedCategory(db);
         var eventEntity = new Event
         {
             Title = "Event",

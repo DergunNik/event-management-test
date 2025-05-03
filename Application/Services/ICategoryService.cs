@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using Application.Dtos.Category;
-using Application.Dtos.Event;
 using Domain.Entities;
 
 namespace Application.Services;
@@ -8,8 +7,7 @@ namespace Application.Services;
 public interface ICategoryService
 {
     Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
-    Task<CategoryPageDto> GetEventsPageAsync(Expression<Func<Category, bool>> filter, CategoryPaginationDto paginationDto,
-        CancellationToken cancellationToken = default);
+    Task<CategoryPageDto> GetEventsPageAsync(CategoryPaginationDto paginationDto, CancellationToken cancellationToken = default);
     Task<CategoryDto?> GetCategoryAsync(int categoryId, CancellationToken cancellationToken = default);
     Task AddCategoryAsync(CategoryCreateDto categoryDto, CancellationToken cancellationToken = default);
     Task UpdateCategoryAsync(CategoryUpdateDto categoryDto, CancellationToken cancellationToken = default);

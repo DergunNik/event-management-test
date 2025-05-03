@@ -11,6 +11,6 @@ public class Event : Entity
 
     public int CategoryId { get; set; }
     public Category Category { get; set; }
-    
+
     public ICollection<Participant> Participants { get; set; } = new List<Participant>();
 }

@@ -59,10 +59,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
-        {
-            return Unauthorized();
-        }
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId)) return Unauthorized();
 
         await authService.LogoutAsync(userId);
         return NoContent();

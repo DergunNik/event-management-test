@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace WebAPI.Daemons;
 
 public class TokenCleanerDaemon(
-    ILogger<TokenCleanerDaemon> logger, 
+    ILogger<TokenCleanerDaemon> logger,
     IOptions<TokensOptions> options,
     IServiceScopeFactory serviceScopeFactory) : BackgroundService
 {
@@ -17,10 +17,7 @@ public class TokenCleanerDaemon(
 
         try
         {
-            while (await timer.WaitForNextTickAsync(stoppingToken))
-            {
-                await Clear(stoppingToken);
-            }
+            while (await timer.WaitForNextTickAsync(stoppingToken)) await Clear(stoppingToken);
         }
         catch (OperationCanceledException)
         {
@@ -38,7 +35,7 @@ public class TokenCleanerDaemon(
         var cleaner = scope.ServiceProvider.GetRequiredService<IRefreshTokenCleaner>();
 
         await cleaner.ClearAsync(token);
-        
+
         logger.LogInformation("Refresh tokens are cleaned.");
     }
 }
