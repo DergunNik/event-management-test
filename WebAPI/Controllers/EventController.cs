@@ -12,21 +12,28 @@ namespace WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class EventController(IEventService eventService) : ControllerBase
+public class EventController : ControllerBase
 {
+    private readonly IEventService _eventService;
+
+    public EventController(IEventService eventService)
+    {
+        _eventService = eventService;
+    }
+    
     [HttpGet]
     public async Task<ActionResult<EventPageDto>> GetAllEventsPaged([FromQuery] EventPaginationDto dto,
         CancellationToken cancellationToken = default)
     {
         var filter = new EventFilterDto();
-        var eventsPage = await eventService.GetEventsPageAsync(filter, dto, cancellationToken);
+        var eventsPage = await _eventService.GetEventsPageAsync(filter, dto, cancellationToken);
         return Ok(eventsPage);
     }
 
     [HttpGet("{eventId:int}")]
     public async Task<ActionResult<EventDto>> GetEventById(int eventId, CancellationToken cancellationToken = default)
     {
-        var ev = await eventService.GetEventAsync(eventId, cancellationToken);
+        var ev = await _eventService.GetEventAsync(eventId, cancellationToken);
         if (ev is null) return NotFound();
         return Ok(ev);
     }
@@ -38,7 +45,7 @@ public class EventController(IEventService eventService) : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var filter = new EventFilterDto{Title = title};
-        var eventsPage = await eventService.GetEventsPageAsync(filter, dto, cancellationToken);
+        var eventsPage = await _eventService.GetEventsPageAsync(filter, dto, cancellationToken);
         return Ok(eventsPage);
     }
 
@@ -48,7 +55,7 @@ public class EventController(IEventService eventService) : ControllerBase
         [FromQuery] EventFilterDto filterDto,
         CancellationToken cancellationToken = default)
     {
-        var eventsPage = await eventService.GetEventsPageAsync(filterDto, paginationDto, cancellationToken);
+        var eventsPage = await _eventService.GetEventsPageAsync(filterDto, paginationDto, cancellationToken);
         return Ok(eventsPage);
     }
 
@@ -57,7 +64,7 @@ public class EventController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> AddEvent([FromBody] EventCreateDto dto,
         CancellationToken cancellationToken = default)
     {
-        await eventService.AddEventAsync(dto, cancellationToken);
+        await _eventService.AddEventAsync(dto, cancellationToken);
         return StatusCode(201);
     }
 
@@ -66,7 +73,7 @@ public class EventController(IEventService eventService) : ControllerBase
     public async Task<IActionResult> UpdateEvent([FromBody] EventUpdateDto dto,
         CancellationToken cancellationToken = default)
     {
-        await eventService.UpdateEventAsync(dto, cancellationToken);
+        await _eventService.UpdateEventAsync(dto, cancellationToken);
         return NoContent();
     }
 
@@ -74,7 +81,7 @@ public class EventController(IEventService eventService) : ControllerBase
     [HttpDelete("{eventId:int}")]
     public async Task<IActionResult> DeleteEvent(int eventId, CancellationToken cancellationToken = default)
     {
-        await eventService.DeleteEventAsync(eventId, cancellationToken);
+        await _eventService.DeleteEventAsync(eventId, cancellationToken);
         return NoContent();
     }
 
@@ -85,14 +92,14 @@ public class EventController(IEventService eventService) : ControllerBase
     {
         if (image.Length == 0) return BadRequest("No image provided.");
         
-        await eventService.SetEventImageAsync(eventId, image, cancellationToken);
+        await _eventService.SetEventImageAsync(eventId, image, cancellationToken);
         return Ok();
     }
 
     [HttpGet("{eventId:int}/image")]
     public async Task<ActionResult<string>> GetEventImage(int eventId, CancellationToken cancellationToken = default)
     {
-        var path = await eventService.GetEventImageAsync(eventId, cancellationToken);
+        var path = await _eventService.GetEventImageAsync(eventId, cancellationToken);
         if (path is null) return NotFound();
 
         return Ok(path);

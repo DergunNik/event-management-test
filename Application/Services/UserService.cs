@@ -8,17 +8,24 @@ using Mapster;
 
 namespace Application.Services;
 
-public class UserService(IUnitOfWork unitOfWork) : IUserService
+public class UserService : IUserService
 {
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UserService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+    
     public async Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId,
         CancellationToken cancellationToken = default)
     {
         var participants =
-            await unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
+            await _unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
 
         List<Task<User?>> userTasks = [];
         userTasks.AddRange(participants.Select(
-            p => unitOfWork.GetRepository<User>().GetByIdAsync(p.UserId, cancellationToken)));
+            p => _unitOfWork.GetRepository<User>().GetByIdAsync(p.UserId, cancellationToken)));
 
         await Task.WhenAll(userTasks);
 
@@ -29,14 +36,14 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
     public async Task<UserDto?> GetUserAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var user = await unitOfWork.GetRepository<User>().GetByIdAsync(userId, cancellationToken);
+        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userId, cancellationToken);
         return user?.Adapt<UserDto>();
     }
 
     public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter,
         CancellationToken cancellationToken = default)
     {
-        var users = await unitOfWork.GetRepository<User>().ListAsync(filter, cancellationToken);
+        var users = await _unitOfWork.GetRepository<User>().ListAsync(filter, cancellationToken);
         return users.Adapt<IEnumerable<UserDto>>();
     }
 
@@ -59,7 +66,7 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
             _ => null
         };
 
-        var pagedResult = await unitOfWork
+        var pagedResult = await _unitOfWork
             .GetRepository<Participant>()
             .GetPagedAsync(
                 paginationDto.Page,
@@ -87,7 +94,7 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
         var (responce, _, @event, _) = await GetEntities(userId, eventId);
         if (responce is not null) return responce;
 
-        var participants = await unitOfWork.GetRepository<Participant>()
+        var participants = await _unitOfWork.GetRepository<Participant>()
             .ListAsync(p => p.EventId == eventId, cancellationToken);
 
         if (@event.MaxParticipants < participants.Count)
@@ -99,8 +106,8 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
             UserId = userId,
             RegistrationDate = DateTime.UtcNow
         };
-        await unitOfWork.GetRepository<Participant>().AddAsync(participant, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Participant>().AddAsync(participant, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
         return new ManageParticipantResponse(true);
     }
 
@@ -112,17 +119,17 @@ public class UserService(IUnitOfWork unitOfWork) : IUserService
 
         if (participant is null) return new ManageParticipantResponse(true);
 
-        await unitOfWork.GetRepository<Participant>().DeleteAsync(participant, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Participant>().DeleteAsync(participant, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
         return new ManageParticipantResponse(true);
     }
 
     private async Task<(ManageParticipantResponse?, User?, Event?, Participant?)> GetEntities(int userId, int eventId)
     {
-        var participantTask = unitOfWork.GetRepository<Participant>()
+        var participantTask = _unitOfWork.GetRepository<Participant>()
             .FirstOrDefaultAsync(p => p.EventId == eventId && p.UserId == userId);
-        var userTask = unitOfWork.GetRepository<User>().GetByIdAsync(userId);
-        var eventTask = unitOfWork.GetRepository<Event>().GetByIdAsync(eventId);
+        var userTask = _unitOfWork.GetRepository<User>().GetByIdAsync(userId);
+        var eventTask = _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId);
 
         await Task.WhenAll(userTask, eventTask, participantTask);
 

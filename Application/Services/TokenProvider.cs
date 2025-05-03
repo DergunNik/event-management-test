@@ -9,8 +9,15 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Services;
 
-public class TokenProvider(IOptions<TokensOptions> options) : ITokenProvider
+public class TokenProvider : ITokenProvider
 {
+    private readonly TokensOptions _options;
+
+    public TokenProvider(IOptions<TokensOptions> options)
+    {
+        _options = options.Value;
+    }
+    
     public string CreateJwt(User user)
     {
         var claims = new List<Claim>
@@ -20,14 +27,14 @@ public class TokenProvider(IOptions<TokensOptions> options) : ITokenProvider
             new(ClaimTypes.Role, user.UserRole.ToString())
         };
         var jwtToken = new JwtSecurityToken(
-            expires: DateTime.UtcNow.AddMinutes(options.Value.JwtExpirationInMinutes),
+            expires: DateTime.UtcNow.AddMinutes(_options.JwtExpirationInMinutes),
             claims: claims,
-            issuer: options.Value.Issuer,
-            audience: options.Value.Audience,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
             signingCredentials:
             new SigningCredentials(
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(options.Value.Secret)),
+                    Encoding.UTF8.GetBytes(_options.Secret)),
                 SecurityAlgorithms.HmacSha256));
 
         return new JwtSecurityTokenHandler().WriteToken(jwtToken);
@@ -36,6 +43,6 @@ public class TokenProvider(IOptions<TokensOptions> options) : ITokenProvider
     public string CreateRefresh()
     {
         return Convert.ToBase64String(
-            RandomNumberGenerator.GetBytes(options.Value.RefreshTokenSize));
+            RandomNumberGenerator.GetBytes(_options.RefreshTokenSize));
     }
 }

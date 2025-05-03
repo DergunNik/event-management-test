@@ -3,6 +3,7 @@ using Application.Dtos.Category;
 using Application.Services;
 using Asp.Versioning;
 using Domain.Entities;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,13 +13,20 @@ namespace WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class CategoryController(ICategoryService categoryService) : ControllerBase
+public class CategoryController : ControllerBase
 {
+    private readonly ICategoryService _categoryService;
+
+    private CategoryController(ICategoryService categoryService)
+    {
+        _categoryService = categoryService;
+    }
+    
     [HttpGet]
     public async Task<ActionResult<CategoryPageDto>> GetAllCategoriesPaged([FromQuery] CategoryPaginationDto dto,
         CancellationToken cancellationToken = default)
     {
-        var categoriesPage = await categoryService.GetEventsPageAsync(dto, cancellationToken);
+        var categoriesPage = await _categoryService.GetEventsPageAsync(dto, cancellationToken);
         return Ok(categoriesPage);
     }
 
@@ -26,7 +34,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
     public async Task<ActionResult<CategoryDto>> GetCategoryById(int categoryId,
         CancellationToken cancellationToken = default)
     {
-        var category = await categoryService.GetCategoryAsync(categoryId, cancellationToken);
+        var category = await _categoryService.GetCategoryAsync(categoryId, cancellationToken);
         if (category is null) return NotFound();
         return Ok(category);
     }
@@ -36,7 +44,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
     public async Task<IActionResult> AddCategory([FromBody] CategoryCreateDto dto,
         CancellationToken cancellationToken = default)
     {
-        await categoryService.AddCategoryAsync(dto, cancellationToken);
+        await _categoryService.AddCategoryAsync(dto, cancellationToken);
         return StatusCode(201);
     }
 
@@ -45,7 +53,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
     public async Task<IActionResult> UpdateCategory([FromBody] CategoryUpdateDto dto,
         CancellationToken cancellationToken = default)
     {
-        await categoryService.UpdateCategoryAsync(dto, cancellationToken);
+        await _categoryService.UpdateCategoryAsync(dto, cancellationToken);
         return NoContent();
     }
 
@@ -53,7 +61,7 @@ public class CategoryController(ICategoryService categoryService) : ControllerBa
     [HttpDelete("{categoryId:int}")]
     public async Task<IActionResult> DeleteCategory(int categoryId, CancellationToken cancellationToken = default)
     {
-        await categoryService.DeleteCategoryAsync(categoryId, cancellationToken);
+        await _categoryService.DeleteCategoryAsync(categoryId, cancellationToken);
         return NoContent();
     }
 }

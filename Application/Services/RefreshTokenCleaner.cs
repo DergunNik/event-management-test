@@ -3,11 +3,18 @@ using Domain.Entities;
 
 namespace Application.Services;
 
-public class RefreshTokenCleaner(IUnitOfWork unitOfWork) : IRefreshTokenCleaner
+public class RefreshTokenCleaner : IRefreshTokenCleaner
 {
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RefreshTokenCleaner(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+    
     public async Task ClearAsync(CancellationToken token)
     {
-        await unitOfWork.GetRepository<RefreshToken>()
+        await _unitOfWork.GetRepository<RefreshToken>()
             .DeleteWhereAsync(rt => rt.ExpiresOnUtc < DateTime.UtcNow, token);
     }
 }

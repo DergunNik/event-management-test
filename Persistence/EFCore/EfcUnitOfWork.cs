@@ -7,34 +7,42 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.EFCore;
 
-public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) : IUnitOfWork
+public class EfcUnitOfWork : IUnitOfWork
 {
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
     private IDbContextTransaction? _currentTransaction;
+    private readonly AppDbContext _context;
+    private readonly ILogger<EfcUnitOfWork> _logger;
 
+    public EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+    
     public IRepository<T> GetRepository<T>() where T : Entity
     {
-        return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new EfcRepository<T>(context));
+        return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new EfcRepository<T>(_context));
     }
 
     public async Task CreateDataBaseAsync()
     {
-        await context.Database.EnsureCreatedAsync();
+        await _context.Database.EnsureCreatedAsync();
     }
 
     public async Task DeleteDataBaseAsync()
     {
-        await context.Database.EnsureDeletedAsync();
+        await _context.Database.EnsureDeletedAsync();
     }
 
     public async Task SaveChangesAsync()
     {
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 
     public void BeginTransaction()
     {
-        _currentTransaction = context.Database.BeginTransaction();
+        _currentTransaction = _context.Database.BeginTransaction();
     }
 
     public async Task CommitTransactionAsync()
@@ -46,7 +54,7 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
             }
             catch (Exception e)
             {
-                logger.LogError("Commit transaction error: {err}", e.Message);
+                _logger.LogError("Commit transaction error: {err}", e.Message);
                 await RollbackTransactionAsync();
                 throw;
             }
@@ -65,7 +73,7 @@ public class EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger) 
             }
             catch (Exception e)
             {
-                logger.LogError("Rollback transaction error: {err}", e.Message);
+                _logger.LogError("Rollback transaction error: {err}", e.Message);
                 throw;
             }
             finally

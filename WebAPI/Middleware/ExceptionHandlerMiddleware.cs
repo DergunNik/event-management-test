@@ -2,8 +2,15 @@
 
 namespace WebAPI.Middleware;
 
-public class ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logger) : IMiddleware
+public class ExceptionHandlerMiddleware : IMiddleware
 {
+    private readonly ILogger<ExceptionHandlerMiddleware> _logger;
+
+    public ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logger)
+    {
+        _logger = logger;
+    }
+    
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -12,7 +19,7 @@ public class ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logg
         }
         catch (Exception e)
         {
-            logger.LogError("From middleware: {Message}", e.Message);
+            _logger.LogError("From middleware: {Message}", e.Message);
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 

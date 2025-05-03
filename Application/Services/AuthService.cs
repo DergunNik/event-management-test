@@ -7,22 +7,35 @@ using Microsoft.Extensions.Options;
 
 namespace Application.Services;
 
-public class AuthService(
-    IUnitOfWork unitOfWork,
-    ITokenProvider tokenProvider,
-    IPasswordHasher passwordHasher,
-    IOptions<TokensOptions> tokenOptions) : IAuthService
+public class AuthService : IAuthService
 {
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITokenProvider _tokenProvider;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly TokensOptions _tokenOptions;
+
+    public AuthService(
+        IUnitOfWork unitOfWork,
+        ITokenProvider tokenProvider,
+        IPasswordHasher passwordHasher,
+        IOptions<TokensOptions> tokenOptions)
+    {
+        _unitOfWork = unitOfWork;
+        _tokenProvider = tokenProvider;
+        _passwordHasher = passwordHasher;
+        _tokenOptions = tokenOptions.Value;
+    }
+
     public async Task<RegistrationResponse> RegisterAsync(RegistrationRequest registrationDto)
     {
-        if (await unitOfWork.GetRepository<User>()
+        if (await _unitOfWork.GetRepository<User>()
                 .AnyAsync(u => u.Email == registrationDto.Email))
             throw new InvalidOperationException("Email is already registered.");
 
         var user = registrationDto.Adapt<User>();
-        user.PasswordHash = await passwordHasher.HashAsync(registrationDto.Password);
-        await unitOfWork.GetRepository<User>().AddAsync(user);
-        await unitOfWork.SaveChangesAsync();
+        user.PasswordHash = await _passwordHasher.HashAsync(registrationDto.Password);
+        await _unitOfWork.GetRepository<User>().AddAsync(user);
+        await _unitOfWork.SaveChangesAsync();
 
         return new RegistrationResponse
         {
@@ -33,24 +46,24 @@ public class AuthService(
 
     public async Task<AuthResponse> LoginAsync(LoginRequest loginDto)
     {
-        var user = await unitOfWork.GetRepository<User>()
+        var user = await _unitOfWork.GetRepository<User>()
                        .FirstOrDefaultAsync(u => u.Email == loginDto.Email)
                    ?? throw new ArgumentException("Invalid email or password.");
 
-        if (!await passwordHasher.VerifyAsync(loginDto.Password, user.PasswordHash))
+        if (!await _passwordHasher.VerifyAsync(loginDto.Password, user.PasswordHash))
             throw new ArgumentException("Invalid email or password.");
 
-        var jwtToken = tokenProvider.CreateJwt(user);
-        var refreshToken = tokenProvider.CreateRefresh();
+        var jwtToken = _tokenProvider.CreateJwt(user);
+        var refreshToken = _tokenProvider.CreateRefresh();
 
-        await unitOfWork.GetRepository<RefreshToken>().AddAsync(
+        await _unitOfWork.GetRepository<RefreshToken>().AddAsync(
             new RefreshToken
             {
                 Token = refreshToken,
                 ExpiresOnUtc = RefreshExpires(),
                 UserId = user.Id
             });
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return new AuthResponse
         {
@@ -63,7 +76,7 @@ public class AuthService(
 
     public async Task<AuthResponse> LoginWithRefreshAsync(RefreshRequest refreshRequest)
     {
-        var repository = unitOfWork.GetRepository<RefreshToken>();
+        var repository = _unitOfWork.GetRepository<RefreshToken>();
         var token = await repository.FirstOrDefaultAsync(rt => rt.Token == refreshRequest.RefreshToken,
             includesProperties: rt => rt.User);
 
@@ -75,13 +88,13 @@ public class AuthService(
             throw new ArgumentException("Token is not valid.");
         }
 
-        var newRefreshToken = tokenProvider.CreateRefresh();
-        var newJwtToken = tokenProvider.CreateJwt(token.User);
+        var newRefreshToken = _tokenProvider.CreateRefresh();
+        var newJwtToken = _tokenProvider.CreateJwt(token.User);
 
         token.Token = newRefreshToken;
         token.ExpiresOnUtc = JwtExpires();
 
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync();
 
         return new AuthResponse
         {
@@ -94,17 +107,17 @@ public class AuthService(
 
     public async Task LogoutAsync(int userId)
     {
-        await unitOfWork.GetRepository<RefreshToken>().DeleteWhereAsync(rt => rt.UserId == userId);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<RefreshToken>().DeleteWhereAsync(rt => rt.UserId == userId);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     private DateTime JwtExpires()
     {
-        return DateTime.UtcNow.AddMinutes(tokenOptions.Value.JwtExpirationInMinutes);
+        return DateTime.UtcNow.AddMinutes(_tokenOptions.JwtExpirationInMinutes);
     }
 
     private DateTime RefreshExpires()
     {
-        return DateTime.UtcNow.AddDays(tokenOptions.Value.RefreshExpirationInDays);
+        return DateTime.UtcNow.AddDays(_tokenOptions.RefreshExpirationInDays);
     }
 }

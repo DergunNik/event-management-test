@@ -12,8 +12,15 @@ namespace WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class UserController(IUserService userService) : ControllerBase
+public class UserController : ControllerBase
 {
+    private readonly IUserService _userService;
+
+    public UserController(IUserService userService)
+    {
+        _userService = userService;
+    }
+    
     [HttpPost("events/{eventId:int}/participate")]
     public async Task<ActionResult<ManageParticipantResponse>> ParticipateInEvent(int eventId,
         CancellationToken cancellationToken = default)
@@ -21,7 +28,7 @@ public class UserController(IUserService userService) : ControllerBase
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId)) return Unauthorized();
 
-        var result = await userService.AddParticipantAsync(userId, eventId, cancellationToken);
+        var result = await _userService.AddParticipantAsync(userId, eventId, cancellationToken);
 
         if (!result.Success) return BadRequest(result);
 
@@ -35,7 +42,7 @@ public class UserController(IUserService userService) : ControllerBase
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId)) return Unauthorized();
 
-        var result = await userService.RemoveParticipantAsync(userId, eventId, cancellationToken);
+        var result = await _userService.RemoveParticipantAsync(userId, eventId, cancellationToken);
 
         if (!result.Success) return BadRequest(result);
 
@@ -46,7 +53,7 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<ActionResult<UserPageDto>> GetEventParticipants(int eventId,
         [FromQuery] UserPaginationDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await userService.GetEventUsersPageAsync(eventId, dto, cancellationToken);
+        var result = await _userService.GetEventUsersPageAsync(eventId, dto, cancellationToken);
         return Ok(result);
     }
 
@@ -54,7 +61,7 @@ public class UserController(IUserService userService) : ControllerBase
     public async Task<ActionResult<UserDto>> GetUserById(int userId,
         CancellationToken cancellationToken = default)
     {
-        var user = await userService.GetUserAsync(userId, cancellationToken);
+        var user = await _userService.GetUserAsync(userId, cancellationToken);
         if (user is null) return NotFound();
 
         return Ok(user);

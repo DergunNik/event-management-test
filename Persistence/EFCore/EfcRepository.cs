@@ -6,10 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.EFCore;
 
-public class EfcRepository<T>(AppDbContext context) : IRepository<T> where T : Entity
+public class EfcRepository<T> : IRepository<T> where T : Entity
 {
-    private readonly DbSet<T> _entities = context.Set<T>();
+    private readonly AppDbContext _context;
+    private readonly DbSet<T> _entities;
 
+    public EfcRepository(AppDbContext context)
+    {
+        _context = context;
+        _entities = context.Set<T>();
+    }
+    
     public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         await _entities.AddAsync(entity, cancellationToken);
@@ -90,7 +97,7 @@ public class EfcRepository<T>(AppDbContext context) : IRepository<T> where T : E
 
     public Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
-        context.Entry(entity).State = EntityState.Modified;
+        _context.Entry(entity).State = EntityState.Modified;
         return Task.CompletedTask;
     }
 

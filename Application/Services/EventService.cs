@@ -7,13 +7,20 @@ using Microsoft.AspNetCore.Http;
 
 namespace Application.Services;
 
-public class EventService(IUnitOfWork unitOfWork) : IEventService
+public class EventService : IEventService
 {
+    private readonly IUnitOfWork _unitOfWork;
+
+    public EventService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+    
     private readonly string _imageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
     public async Task<IEnumerable<EventDto>> GetAllEventsAsync(CancellationToken cancellationToken = default)
     {
-        var events = await unitOfWork.GetRepository<Event>().ListAllAsync(cancellationToken);
+        var events = await _unitOfWork.GetRepository<Event>().ListAllAsync(cancellationToken);
         return events.Adapt<IEnumerable<EventDto>>();
     }
 
@@ -21,7 +28,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         Expression<Func<Event, bool>> filter,
         CancellationToken cancellationToken = default)
     {
-        var events = await unitOfWork.GetRepository<Event>().ListAsync(filter, cancellationToken);
+        var events = await _unitOfWork.GetRepository<Event>().ListAsync(filter, cancellationToken);
         return events.Adapt<IEnumerable<EventDto>>();
     }
 
@@ -31,7 +38,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         var filter = CreateFilter(filterDto);
         var orderBy = CreateOrderBy(paginationDto);
 
-        var pagedResult = await unitOfWork
+        var pagedResult = await _unitOfWork
             .GetRepository<Event>()
             .GetPagedAsync(
                 paginationDto.Page,
@@ -51,7 +58,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
 
     public async Task<EventDto?> GetEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
-        var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
+        var @event = await _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken);
         return @event?.Adapt<EventDto>();
     }
 
@@ -60,32 +67,32 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         await ThrowIfInvalidCategory(eventCreateDto.CategoryId, cancellationToken);
 
         var @event = eventCreateDto.Adapt<Event>();
-        await unitOfWork.GetRepository<Event>().AddAsync(@event, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Event>().AddAsync(@event, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UpdateEventAsync(EventUpdateDto eventUpdateDto, CancellationToken cancellationToken = default)
     {
         await ThrowIfInvalidCategory(eventUpdateDto.CategoryId, cancellationToken);
 
-        var fromBd = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventUpdateDto.Id, cancellationToken)
+        var fromBd = await _unitOfWork.GetRepository<Event>().GetByIdAsync(eventUpdateDto.Id, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
         eventUpdateDto.Adapt(fromBd);
-        await unitOfWork.GetRepository<Event>().UpdateAsync(fromBd, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Event>().UpdateAsync(fromBd, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteEventAsync(int eventId, CancellationToken cancellationToken = default)
     {
-        var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
+        var @event = await _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
-        await unitOfWork.GetRepository<Event>().DeleteAsync(@event, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Event>().DeleteAsync(@event, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task SetEventImageAsync(int eventId, IFormFile image, CancellationToken cancellationToken = default)
     {
-        var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
+        var @event = await _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
 
         var fileName = $"event_{eventId}{Path.GetExtension(image.FileName)}";
@@ -97,13 +104,13 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
         }
 
         @event.ImagePath = $"/images/{fileName}";
-        await unitOfWork.GetRepository<Event>().UpdateAsync(@event, cancellationToken);
-        await unitOfWork.SaveChangesAsync();
+        await _unitOfWork.GetRepository<Event>().UpdateAsync(@event, cancellationToken);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<string?> GetEventImageAsync(int eventId, CancellationToken cancellationToken = default)
     {
-        var @event = await unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
+        var @event = await _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
 
         return @event.ImagePath ?? null;
@@ -141,7 +148,7 @@ public class EventService(IUnitOfWork unitOfWork) : IEventService
     
     private async Task ThrowIfInvalidCategory(int categoryId, CancellationToken cancellationToken = default)
     {
-        if (await unitOfWork.GetRepository<Category>().GetByIdAsync(categoryId, cancellationToken) == null)
+        if (await _unitOfWork.GetRepository<Category>().GetByIdAsync(categoryId, cancellationToken) == null)
             throw new NullReferenceException("Invalid event category id.");
     }
 }

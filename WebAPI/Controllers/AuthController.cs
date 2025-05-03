@@ -2,6 +2,7 @@
 using Application.Dtos.Auth;
 using Application.Services;
 using Asp.Versioning;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,14 +11,21 @@ namespace WebAPI.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController : ControllerBase
 {
+    private readonly IAuthService _authService;
+
+    private AuthController(IAuthService authService)
+    {
+        _authService = authService;
+    }
+    
     [HttpPost("signup")]
     public async Task<ActionResult<RegistrationResponse>> Register([FromBody] RegistrationRequest registrationDto)
     {
         try
         {
-            var result = await authService.RegisterAsync(registrationDto);
+            var result = await _authService.RegisterAsync(registrationDto);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -31,7 +39,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         try
         {
-            var result = await authService.LoginAsync(loginDto);
+            var result = await _authService.LoginAsync(loginDto);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -45,7 +53,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     {
         try
         {
-            var result = await authService.LoginWithRefreshAsync(refreshDto);
+            var result = await _authService.LoginWithRefreshAsync(refreshDto);
             return Ok(result);
         }
         catch (ArgumentException ex)
@@ -61,7 +69,7 @@ public class AuthController(IAuthService authService) : ControllerBase
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
         if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId)) return Unauthorized();
 
-        await authService.LogoutAsync(userId);
+        await _authService.LogoutAsync(userId);
         return NoContent();
     }
 }
