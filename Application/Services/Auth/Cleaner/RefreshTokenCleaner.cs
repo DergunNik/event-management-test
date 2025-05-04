@@ -1,7 +1,7 @@
 ﻿using Domain.Abstractions;
 using Domain.Entities;
 
-namespace Application.Services;
+namespace Application.Services.Auth.Cleaner;
 
 public class RefreshTokenCleaner : IRefreshTokenCleaner
 {

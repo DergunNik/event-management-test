@@ -1,8 +1,6 @@
-﻿using System.Linq.Expressions;
-using Application.Dtos.Category;
-using Domain.Entities;
+﻿using Application.Dtos.Category;
 
-namespace Application.Services;
+namespace Application.Services.Category;
 
 public interface ICategoryService
 {

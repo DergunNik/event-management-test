@@ -4,7 +4,7 @@ using Application.Options;
 using Konscious.Security.Cryptography;
 using Microsoft.Extensions.Options;
 
-namespace Application.Services;
+namespace Application.Services.Auth.Helpers;
 
 public class Argon2PasswordHasher : IPasswordHasher
 {

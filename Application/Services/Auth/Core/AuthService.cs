@@ -1,11 +1,12 @@
 ﻿using Application.Dtos.Auth;
 using Application.Options;
+using Application.Services.Auth.Helpers;
 using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
 using Microsoft.Extensions.Options;
 
-namespace Application.Services;
+namespace Application.Services.Auth.Core;
 
 public class AuthService : IAuthService
 {
@@ -28,13 +29,13 @@ public class AuthService : IAuthService
 
     public async Task<RegistrationResponse> RegisterAsync(RegistrationRequest registrationDto)
     {
-        if (await _unitOfWork.GetRepository<User>()
+        if (await _unitOfWork.GetRepository<Domain.Entities.User>()
                 .AnyAsync(u => u.Email == registrationDto.Email))
             throw new InvalidOperationException("Email is already registered.");
 
-        var user = registrationDto.Adapt<User>();
+        var user = registrationDto.Adapt<Domain.Entities.User>();
         user.PasswordHash = await _passwordHasher.HashAsync(registrationDto.Password);
-        await _unitOfWork.GetRepository<User>().AddAsync(user);
+        await _unitOfWork.GetRepository<Domain.Entities.User>().AddAsync(user);
         await _unitOfWork.SaveChangesAsync();
 
         return new RegistrationResponse
@@ -46,7 +47,7 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> LoginAsync(LoginRequest loginDto)
     {
-        var user = await _unitOfWork.GetRepository<User>()
+        var user = await _unitOfWork.GetRepository<Domain.Entities.User>()
                        .FirstOrDefaultAsync(u => u.Email == loginDto.Email)
                    ?? throw new ArgumentException("Invalid email or password.");
 

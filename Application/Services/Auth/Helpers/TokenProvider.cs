@@ -7,7 +7,7 @@ using Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Application.Services;
+namespace Application.Services.Auth.Helpers;
 
 public class TokenProvider : ITokenProvider
 {
@@ -18,7 +18,7 @@ public class TokenProvider : ITokenProvider
         _options = options.Value;
     }
     
-    public string CreateJwt(User user)
+    public string CreateJwt(Domain.Entities.User user)
     {
         var claims = new List<Claim>
         {

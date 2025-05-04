@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Application.Dtos.Event;
 using Application.Services;
+using Application.Services.Event;
 using Asp.Versioning;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;

@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Dtos.Auth;
 using Application.Services;
+using Application.Services.Auth.Core;
 using Asp.Versioning;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;

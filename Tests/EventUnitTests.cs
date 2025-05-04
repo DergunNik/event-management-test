@@ -1,5 +1,6 @@
 ﻿using Application.Dtos.Event;
 using Application.Services;
+using Application.Services.Event;
 using Domain.Abstractions;
 using Domain.Entities;
 using Infrastructure.Data;

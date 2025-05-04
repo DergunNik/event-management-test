@@ -1,15 +1,14 @@
 ﻿using System.Linq.Expressions;
 using Application.Dtos.Event;
-using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 
-namespace Application.Services;
+namespace Application.Services.Event;
 
 public interface IEventService
 {
     Task<IEnumerable<EventDto>> GetAllEventsAsync(CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<EventDto>> GetEventsAsync(Expression<Func<Event, bool>> filter,
+    Task<IEnumerable<EventDto>> GetEventsAsync(Expression<Func<Domain.Entities.Event, bool>> filter,
         CancellationToken cancellationToken = default);
 
     Task<EventPageDto> GetEventsPageAsync(EventFilterDto filter, EventPaginationDto paginationDto,

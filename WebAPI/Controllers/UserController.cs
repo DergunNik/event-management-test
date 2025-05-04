@@ -2,6 +2,7 @@
 using Application.Dtos.Participant;
 using Application.Dtos.User;
 using Application.Services;
+using Application.Services.User;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

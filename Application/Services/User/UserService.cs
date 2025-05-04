@@ -6,7 +6,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Mapster;
 
-namespace Application.Services;
+namespace Application.Services.User;
 
 public class UserService : IUserService
 {
@@ -23,27 +23,27 @@ public class UserService : IUserService
         var participants =
             await _unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
 
-        List<Task<User?>> userTasks = [];
+        List<Task<Domain.Entities.User?>> userTasks = [];
         userTasks.AddRange(participants.Select(
-            p => _unitOfWork.GetRepository<User>().GetByIdAsync(p.UserId, cancellationToken)));
+            p => _unitOfWork.GetRepository<Domain.Entities.User>().GetByIdAsync(p.UserId, cancellationToken)));
 
         await Task.WhenAll(userTasks);
 
-        List<User> users = [];
+        List<Domain.Entities.User> users = [];
         users.AddRange(userTasks.Select(ut => ut.Result).Where(ut => ut is not null));
         return users.Adapt<IEnumerable<UserDto>>();
     }
 
     public async Task<UserDto?> GetUserAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var user = await _unitOfWork.GetRepository<User>().GetByIdAsync(userId, cancellationToken);
+        var user = await _unitOfWork.GetRepository<Domain.Entities.User>().GetByIdAsync(userId, cancellationToken);
         return user?.Adapt<UserDto>();
     }
 
-    public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter,
+    public async Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<Domain.Entities.User, bool>> filter,
         CancellationToken cancellationToken = default)
     {
-        var users = await _unitOfWork.GetRepository<User>().ListAsync(filter, cancellationToken);
+        var users = await _unitOfWork.GetRepository<Domain.Entities.User>().ListAsync(filter, cancellationToken);
         return users.Adapt<IEnumerable<UserDto>>();
     }
 
@@ -124,12 +124,12 @@ public class UserService : IUserService
         return new ManageParticipantResponse(true);
     }
 
-    private async Task<(ManageParticipantResponse?, User?, Event?, Participant?)> GetEntities(int userId, int eventId)
+    private async Task<(ManageParticipantResponse?, Domain.Entities.User?, Domain.Entities.Event?, Participant?)> GetEntities(int userId, int eventId)
     {
         var participantTask = _unitOfWork.GetRepository<Participant>()
             .FirstOrDefaultAsync(p => p.EventId == eventId && p.UserId == userId);
-        var userTask = _unitOfWork.GetRepository<User>().GetByIdAsync(userId);
-        var eventTask = _unitOfWork.GetRepository<Event>().GetByIdAsync(eventId);
+        var userTask = _unitOfWork.GetRepository<Domain.Entities.User>().GetByIdAsync(userId);
+        var eventTask = _unitOfWork.GetRepository<Domain.Entities.Event>().GetByIdAsync(eventId);
 
         await Task.WhenAll(userTask, eventTask, participantTask);
 

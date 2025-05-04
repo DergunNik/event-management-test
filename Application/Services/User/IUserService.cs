@@ -1,16 +1,15 @@
 ﻿using System.Linq.Expressions;
 using Application.Dtos.Participant;
 using Application.Dtos.User;
-using Domain.Entities;
 
-namespace Application.Services;
+namespace Application.Services.User;
 
 public interface IUserService
 {
     Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId, CancellationToken cancellationToken = default);
     Task<UserDto?> GetUserAsync(int userId, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<User, bool>> filter,
+    Task<IEnumerable<UserDto>> GetUsersAsync(Expression<Func<Domain.Entities.User, bool>> filter,
         CancellationToken cancellationToken = default);
 
     Task<UserPageDto> GetEventUsersPageAsync(int eventId, UserPaginationDto paginationDto,

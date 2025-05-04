@@ -1,5 +1,11 @@
 ﻿using Application.Options;
 using Application.Services;
+using Application.Services.Auth.Cleaner;
+using Application.Services.Auth.Core;
+using Application.Services.Auth.Helpers;
+using Application.Services.Category;
+using Application.Services.Event;
+using Application.Services.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
