@@ -1,5 +1,4 @@
 ﻿using Application.Options;
-using Application.Services;
 using Application.Services.Auth.Cleaner;
 using Microsoft.Extensions.Options;
 
@@ -20,7 +19,7 @@ public class TokenCleanerDaemon : BackgroundService
         _options = options;
         _serviceScopeFactory = serviceScopeFactory;
     }
-    
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("TokenCleanerDaemon running.");

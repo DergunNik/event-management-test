@@ -1,9 +1,6 @@
-﻿using System.Linq.Expressions;
-using Application.Dtos.Event;
-using Application.Services;
+﻿using Application.Dtos.Event;
 using Application.Services.Event;
 using Asp.Versioning;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,7 +18,7 @@ public class EventController : ControllerBase
     {
         _eventService = eventService;
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<EventPageDto>> GetAllEventsPaged([FromQuery] EventPaginationDto dto,
         CancellationToken cancellationToken = default)
@@ -45,7 +42,7 @@ public class EventController : ControllerBase
         [FromQuery] EventPaginationDto dto,
         CancellationToken cancellationToken = default)
     {
-        var filter = new EventFilterDto{Title = title};
+        var filter = new EventFilterDto { Title = title };
         var eventsPage = await _eventService.GetEventsPageAsync(filter, dto, cancellationToken);
         return Ok(eventsPage);
     }
@@ -92,7 +89,7 @@ public class EventController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         if (image.Length == 0) return BadRequest("No image provided.");
-        
+
         await _eventService.SetEventImageAsync(eventId, image, cancellationToken);
         return Ok();
     }

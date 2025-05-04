@@ -1,4 +1,4 @@
-﻿using Domain.Abstractions;
+﻿using Application.Abstractions;
 using Infrastructure.Data;
 using Infrastructure.EFCore;
 using Microsoft.Extensions.Configuration;

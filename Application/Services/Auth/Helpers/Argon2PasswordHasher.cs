@@ -14,7 +14,7 @@ public class Argon2PasswordHasher : IPasswordHasher
     {
         _options = options.Value;
     }
-    
+
     public string Hash(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(_options.SaltSize);

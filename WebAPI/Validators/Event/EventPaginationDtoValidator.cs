@@ -16,7 +16,7 @@ public class EventPaginationDtoValidator : AbstractValidator<EventPaginationDto>
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, restrictions.Value.PageSize)
             .WithMessage($"Page size must be between 1 and {restrictions.Value.PageSize}");
-        
+
         RuleFor(x => x.SortBy)
             .IsInEnum()
             .WithMessage("Invalid sort field.");

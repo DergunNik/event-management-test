@@ -1,6 +1,6 @@
 ﻿using Domain.Entities;
 
-namespace Domain.Abstractions;
+namespace Application.Abstractions;
 
 public interface IUnitOfWork
 {

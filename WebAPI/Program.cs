@@ -44,7 +44,7 @@ builder.Services.AddPersistence(builder.Configuration)
     .AddTransient<ExceptionHandlerMiddleware>()
     .AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<Program>(); 
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

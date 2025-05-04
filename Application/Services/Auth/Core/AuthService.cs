@@ -1,7 +1,7 @@
-﻿using Application.Dtos.Auth;
+﻿using Application.Abstractions;
+using Application.Dtos.Auth;
 using Application.Options;
 using Application.Services.Auth.Helpers;
-using Domain.Abstractions;
 using Domain.Entities;
 using Mapster;
 using Microsoft.Extensions.Options;
@@ -10,10 +10,10 @@ namespace Application.Services.Auth.Core;
 
 public class AuthService : IAuthService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ITokenProvider _tokenProvider;
     private readonly IPasswordHasher _passwordHasher;
     private readonly TokensOptions _tokenOptions;
+    private readonly ITokenProvider _tokenProvider;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AuthService(
         IUnitOfWork unitOfWork,
@@ -36,7 +36,6 @@ public class AuthService : IAuthService
         var user = registrationDto.Adapt<Domain.Entities.User>();
         user.PasswordHash = await _passwordHasher.HashAsync(registrationDto.Password);
         await _unitOfWork.GetRepository<Domain.Entities.User>().AddAsync(user);
-        await _unitOfWork.SaveChangesAsync();
 
         return new RegistrationResponse
         {
@@ -57,21 +56,21 @@ public class AuthService : IAuthService
         var jwtToken = _tokenProvider.CreateJwt(user);
         var refreshToken = _tokenProvider.CreateRefresh();
 
+        var refreshExpiresDate = RefreshExpires();
         await _unitOfWork.GetRepository<RefreshToken>().AddAsync(
             new RefreshToken
             {
                 Token = refreshToken,
-                ExpiresOnUtc = RefreshExpires(),
+                ExpiresOnUtc = refreshExpiresDate,
                 UserId = user.Id
             });
-        await _unitOfWork.SaveChangesAsync();
 
         return new AuthResponse
         {
             AccessToken = jwtToken,
             RefreshToken = refreshToken,
             JwtExpiresOnUtc = JwtExpires(),
-            RefreshExpiresOnUtc = RefreshExpires()
+            RefreshExpiresOnUtc = refreshExpiresDate
         };
     }
 
@@ -94,8 +93,7 @@ public class AuthService : IAuthService
 
         token.Token = newRefreshToken;
         token.ExpiresOnUtc = JwtExpires();
-
-        await _unitOfWork.SaveChangesAsync();
+        await repository.UpdateAsync(token);
 
         return new AuthResponse
         {
@@ -109,7 +107,6 @@ public class AuthService : IAuthService
     public async Task LogoutAsync(int userId)
     {
         await _unitOfWork.GetRepository<RefreshToken>().DeleteWhereAsync(rt => rt.UserId == userId);
-        await _unitOfWork.SaveChangesAsync();
     }
 
     private DateTime JwtExpires()

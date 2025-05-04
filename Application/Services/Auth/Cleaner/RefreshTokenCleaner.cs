@@ -1,4 +1,4 @@
-﻿using Domain.Abstractions;
+﻿using Application.Abstractions;
 using Domain.Entities;
 
 namespace Application.Services.Auth.Cleaner;
@@ -11,7 +11,7 @@ public class RefreshTokenCleaner : IRefreshTokenCleaner
     {
         _unitOfWork = unitOfWork;
     }
-    
+
     public async Task ClearAsync(CancellationToken token)
     {
         await _unitOfWork.GetRepository<RefreshToken>()

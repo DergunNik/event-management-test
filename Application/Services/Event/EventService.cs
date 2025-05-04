@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
+using Application.Abstractions;
 using Application.Dtos.Event;
-using Domain.Abstractions;
 using Mapster;
 using Microsoft.AspNetCore.Http;
 
@@ -8,14 +8,13 @@ namespace Application.Services.Event;
 
 public class EventService : IEventService
 {
+    private readonly string _imageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
     private readonly IUnitOfWork _unitOfWork;
 
     public EventService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
     }
-    
-    private readonly string _imageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
     public async Task<IEnumerable<EventDto>> GetAllEventsAsync(CancellationToken cancellationToken = default)
     {
@@ -67,18 +66,17 @@ public class EventService : IEventService
 
         var @event = eventCreateDto.Adapt<Domain.Entities.Event>();
         await _unitOfWork.GetRepository<Domain.Entities.Event>().AddAsync(@event, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task UpdateEventAsync(EventUpdateDto eventUpdateDto, CancellationToken cancellationToken = default)
     {
         await ThrowIfInvalidCategory(eventUpdateDto.CategoryId, cancellationToken);
 
-        var fromBd = await _unitOfWork.GetRepository<Domain.Entities.Event>().GetByIdAsync(eventUpdateDto.Id, cancellationToken)
+        var fromBd = await _unitOfWork.GetRepository<Domain.Entities.Event>()
+                         .GetByIdAsync(eventUpdateDto.Id, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
         eventUpdateDto.Adapt(fromBd);
         await _unitOfWork.GetRepository<Domain.Entities.Event>().UpdateAsync(fromBd, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteEventAsync(int eventId, CancellationToken cancellationToken = default)
@@ -86,7 +84,6 @@ public class EventService : IEventService
         var @event = await _unitOfWork.GetRepository<Domain.Entities.Event>().GetByIdAsync(eventId, cancellationToken)
                      ?? throw new NullReferenceException("Event not found.");
         await _unitOfWork.GetRepository<Domain.Entities.Event>().DeleteAsync(@event, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task SetEventImageAsync(int eventId, IFormFile image, CancellationToken cancellationToken = default)
@@ -104,7 +101,6 @@ public class EventService : IEventService
 
         @event.ImagePath = $"/images/{fileName}";
         await _unitOfWork.GetRepository<Domain.Entities.Event>().UpdateAsync(@event, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<string?> GetEventImageAsync(int eventId, CancellationToken cancellationToken = default)
@@ -115,7 +111,8 @@ public class EventService : IEventService
         return @event.ImagePath ?? null;
     }
 
-    private static Func<IQueryable<Domain.Entities.Event>, IOrderedQueryable<Domain.Entities.Event>>? CreateOrderBy(EventPaginationDto paginationDto)
+    private static Func<IQueryable<Domain.Entities.Event>, IOrderedQueryable<Domain.Entities.Event>>? CreateOrderBy(
+        EventPaginationDto paginationDto)
     {
         return paginationDto.SortBy switch
         {
@@ -144,10 +141,11 @@ public class EventService : IEventService
             (filterDto.Location == null || e.Location.Contains(filterDto.Location)) &&
             (filterDto.CategoryId == null || e.CategoryId == filterDto.CategoryId);
     }
-    
+
     private async Task ThrowIfInvalidCategory(int categoryId, CancellationToken cancellationToken = default)
     {
-        if (await _unitOfWork.GetRepository<Domain.Entities.Category>().GetByIdAsync(categoryId, cancellationToken) == null)
+        if (await _unitOfWork.GetRepository<Domain.Entities.Category>().GetByIdAsync(categoryId, cancellationToken) ==
+            null)
             throw new NullReferenceException("Invalid event category id.");
     }
 }

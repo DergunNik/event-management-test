@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
+using Application.Abstractions;
 using Application.Dtos.Participant;
 using Application.Dtos.User;
-using Domain.Abstractions;
 using Domain.Entities;
 using Domain.Enums;
 using Mapster;
@@ -16,22 +16,17 @@ public class UserService : IUserService
     {
         _unitOfWork = unitOfWork;
     }
-    
+
     public async Task<IEnumerable<UserDto>> GetEventUsersAsync(int eventId,
         CancellationToken cancellationToken = default)
     {
-        var participants =
-            await _unitOfWork.GetRepository<Participant>().ListAsync(p => p.EventId == eventId, cancellationToken);
+        var participants = await _unitOfWork.GetRepository<Participant>()
+            .ListAsync(p => p.EventId == eventId, cancellationToken, p => p.User);
 
-        List<Task<Domain.Entities.User?>> userTasks = [];
-        userTasks.AddRange(participants.Select(
-            p => _unitOfWork.GetRepository<Domain.Entities.User>().GetByIdAsync(p.UserId, cancellationToken)));
-
-        await Task.WhenAll(userTasks);
-
-        List<Domain.Entities.User> users = [];
-        users.AddRange(userTasks.Select(ut => ut.Result).Where(ut => ut is not null));
-        return users.Adapt<IEnumerable<UserDto>>();
+        var users = participants
+            .Select(p => p.User)
+            .Adapt<IEnumerable<UserDto>>();
+        return users;
     }
 
     public async Task<UserDto?> GetUserAsync(int userId, CancellationToken cancellationToken = default)
@@ -107,7 +102,6 @@ public class UserService : IUserService
             RegistrationDate = DateTime.UtcNow
         };
         await _unitOfWork.GetRepository<Participant>().AddAsync(participant, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
         return new ManageParticipantResponse(true);
     }
 
@@ -120,11 +114,11 @@ public class UserService : IUserService
         if (participant is null) return new ManageParticipantResponse(true);
 
         await _unitOfWork.GetRepository<Participant>().DeleteAsync(participant, cancellationToken);
-        await _unitOfWork.SaveChangesAsync();
         return new ManageParticipantResponse(true);
     }
 
-    private async Task<(ManageParticipantResponse?, Domain.Entities.User?, Domain.Entities.Event?, Participant?)> GetEntities(int userId, int eventId)
+    private async Task<(ManageParticipantResponse?, Domain.Entities.User?, Domain.Entities.Event?, Participant?)>
+        GetEntities(int userId, int eventId)
     {
         var participantTask = _unitOfWork.GetRepository<Participant>()
             .FirstOrDefaultAsync(p => p.EventId == eventId && p.UserId == userId);

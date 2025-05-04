@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Domain.Abstractions;
+using Application.Abstractions;
 using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -9,17 +9,17 @@ namespace Infrastructure.EFCore;
 
 public class EfcUnitOfWork : IUnitOfWork
 {
-    private readonly ConcurrentDictionary<Type, object> _repositories = new();
-    private IDbContextTransaction? _currentTransaction;
     private readonly AppDbContext _context;
     private readonly ILogger<EfcUnitOfWork> _logger;
+    private readonly ConcurrentDictionary<Type, object> _repositories = new();
+    private IDbContextTransaction? _currentTransaction;
 
     public EfcUnitOfWork(AppDbContext context, ILogger<EfcUnitOfWork> logger)
     {
         _context = context;
         _logger = logger;
     }
-    
+
     public IRepository<T> GetRepository<T>() where T : Entity
     {
         return (IRepository<T>)_repositories.GetOrAdd(typeof(T), _ => new EfcRepository<T>(_context));

@@ -1,9 +1,7 @@
 ﻿using System.Security.Claims;
 using Application.Dtos.Auth;
-using Application.Services;
 using Application.Services.Auth.Core;
 using Asp.Versioning;
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +18,7 @@ public class AuthController : ControllerBase
     {
         _authService = authService;
     }
-    
+
     [HttpPost("signup")]
     public async Task<ActionResult<RegistrationResponse>> Register([FromBody] RegistrationRequest registrationDto)
     {

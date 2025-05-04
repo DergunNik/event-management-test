@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Application.Options;
-using Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -17,7 +16,7 @@ public class TokenProvider : ITokenProvider
     {
         _options = options.Value;
     }
-    
+
     public string CreateJwt(Domain.Entities.User user)
     {
         var claims = new List<Claim>

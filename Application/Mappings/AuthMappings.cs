@@ -1,5 +1,4 @@
 ﻿using Application.Dtos.Auth;
-using Application.Services;
 using Application.Services.Auth.Helpers;
 using Domain.Entities;
 using Domain.Enums;
@@ -10,7 +9,7 @@ namespace Application.Mappings;
 public class AuthMappings : IRegister
 {
     private readonly IPasswordHasher _passwordHasher;
-    
+
     public AuthMappings(IPasswordHasher passwordHasher)
     {
         _passwordHasher = passwordHasher;

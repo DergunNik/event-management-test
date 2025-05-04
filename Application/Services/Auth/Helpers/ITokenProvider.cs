@@ -1,6 +1,4 @@
-﻿using Domain.Entities;
-
-namespace Application.Services.Auth.Helpers;
+﻿namespace Application.Services.Auth.Helpers;
 
 public interface ITokenProvider
 {

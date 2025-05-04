@@ -1,10 +1,6 @@
-﻿using System.Linq.Expressions;
-using Application.Dtos.Category;
-using Application.Services;
+﻿using Application.Dtos.Category;
 using Application.Services.Category;
 using Asp.Versioning;
-using Domain.Entities;
-using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +18,7 @@ public class CategoryController : ControllerBase
     {
         _categoryService = categoryService;
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<CategoryPageDto>> GetAllCategoriesPaged([FromQuery] CategoryPaginationDto dto,
         CancellationToken cancellationToken = default)

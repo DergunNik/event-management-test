@@ -1,7 +1,6 @@
 ﻿using System.Security.Claims;
 using Application.Dtos.Participant;
 using Application.Dtos.User;
-using Application.Services;
 using Application.Services.User;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +20,7 @@ public class UserController : ControllerBase
     {
         _userService = userService;
     }
-    
+
     [HttpPost("events/{eventId:int}/participate")]
     public async Task<ActionResult<ManageParticipantResponse>> ParticipateInEvent(int eventId,
         CancellationToken cancellationToken = default)

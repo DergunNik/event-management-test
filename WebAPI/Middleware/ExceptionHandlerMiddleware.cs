@@ -10,7 +10,7 @@ public class ExceptionHandlerMiddleware : IMiddleware
     {
         _logger = logger;
     }
-    
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try

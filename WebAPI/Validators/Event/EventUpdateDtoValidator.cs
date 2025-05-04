@@ -39,7 +39,7 @@ public class EventUpdateDtoValidator : AbstractValidator<EventUpdateDto>
         RuleFor(x => x.CategoryId)
             .GreaterThan(0)
             .WithMessage("CategoryId must be valid");
-        
+
         RuleFor(x => x.Id)
             .GreaterThan(0)
             .WithMessage("Id must be valid");

@@ -29,7 +29,6 @@ public class EfcRepositoryTests
             CategoryId = 1
         };
         await repo.AddAsync(ev);
-        await db.SaveChangesAsync();
 
         var found = await db.Events.FirstOrDefaultAsync(x => x.Title == "RepoTest");
         Assert.NotNull(found);
@@ -84,8 +83,6 @@ public class EfcRepositoryTests
             CategoryId = 1
         };
 
-        await repo.AddAsync(ev);
-
-        await Assert.ThrowsAsync<DbUpdateException>(async () => { await db.SaveChangesAsync(); });
+        await Assert.ThrowsAsync<DbUpdateException>(async () => { await repo.AddAsync(ev); });
     }
 }
